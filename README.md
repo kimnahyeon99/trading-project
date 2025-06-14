@@ -234,10 +234,6 @@ https://github.com/user-attachments/assets/13952cf9-204a-4052-bbb0-63f934e3181a
 ---
 # 결과 화면
 
-[▶️ result_video.mp4 직접 보기](https://raw.githubusercontent.com/sw-dreamer/trading-project/master/video/result_video.mp4)
-
-
 https://github.com/user-attachments/assets/4bfb6a06-4185-4a76-a7f1-9845d3369fba
 
 
-# trading-project
