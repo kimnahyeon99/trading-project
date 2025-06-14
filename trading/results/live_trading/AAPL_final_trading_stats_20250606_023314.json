@@ -1,0 +1,78 @@
+{
+    "trading_stats": {
+        "start_time": "2025-06-06 02:28:50.619428",
+        "trades": [
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 0.23891517500965204,
+                "price": 202.56,
+                "timestamp": "2025-06-06 02:29:01",
+                "order_id": "7a3d3aee-21cc-47d4-b0a3-50bfbc64db8d",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 0.6159181215,
+                "price": 202.72,
+                "timestamp": "2025-06-06 02:31:12",
+                "order_id": "593077d9-a1e1-470d-a4d0-4a3e92ca383a",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 0.10021325432889998,
+                "price": 202.57,
+                "timestamp": "2025-06-06 02:32:17",
+                "order_id": "3d215252-336d-458d-a46d-5992f0a0b46f",
+                "status": "success",
+                "model_type": "LSTM"
+            }
+        ],
+        "successful_trades": 3,
+        "failed_trades": 0,
+        "initial_balance": 99712.23,
+        "current_balance": 99905.79,
+        "pnl": 193.55999999999767,
+        "daily_start_balance": 99712.23,
+        "session_start_positions": {
+            "AAPL": {
+                "symbol": "AAPL",
+                "qty": 1.470751418,
+                "avg_entry_price": 202.355197,
+                "current_price": 202.635,
+                "market_value": 298.025714,
+                "unrealized_pl": 0.411521,
+                "unrealized_plpc": 0.0013827331144789,
+                "change_today": -0.0009121388423232
+            }
+        }
+    },
+    "account_info": {
+        "id": "ad7cb72d-3347-49f6-8db1-540ace75230e",
+        "cash": 99905.79,
+        "portfolio_value": 100010.32,
+        "equity": 100010.32,
+        "buying_power": 381869.42,
+        "status": "ACTIVE",
+        "day_trade_count": 0,
+        "pattern_day_trader": true
+    },
+    "positions": {
+        "AAPL": {
+            "symbol": "AAPL",
+            "qty": 0.515704868,
+            "avg_entry_price": 202.355197,
+            "current_price": 202.69,
+            "market_value": 104.52822,
+            "unrealized_pl": 0.17266,
+            "unrealized_plpc": 0.001654535704662,
+            "change_today": -0.0006409624297407
+        }
+    },
+    "timestamp": "2025-06-06 02:33:14"
+}

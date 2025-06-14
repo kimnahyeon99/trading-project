@@ -1,0 +1,65 @@
+{
+    "trading_stats": {
+        "start_time": "2025-05-27 23:24:29.132328",
+        "trades": [
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 2.52,
+                "price": 198.41,
+                "timestamp": "2025-05-27 23:24:50",
+                "order_id": "8f35320e-db5f-424f-a93a-71e0b1bbfd2d",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 2.518,
+                "price": 198.57,
+                "timestamp": "2025-05-27 23:26:00",
+                "order_id": "8e1947b3-49ca-4d32-add2-5e76a32f1c4d",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 2.5185,
+                "price": 198.53,
+                "timestamp": "2025-05-27 23:27:10",
+                "order_id": "ecfd289f-8d34-4d4e-8594-c79765535a1b",
+                "status": "success",
+                "model_type": "CNN"
+            }
+        ],
+        "successful_trades": 3,
+        "failed_trades": 0,
+        "initial_balance": 99036.83,
+        "current_balance": 97536.34,
+        "pnl": -1500.4900000000052
+    },
+    "account_info": {
+        "id": "ad7cb72d-3347-49f6-8db1-540ace75230e",
+        "cash": 97536.34,
+        "portfolio_value": 100036.7,
+        "equity": 100036.7,
+        "buying_power": 197573.04,
+        "status": "ACTIVE",
+        "day_trade_count": 0,
+        "pattern_day_trader": false
+    },
+    "positions": {
+        "AAPL": {
+            "symbol": "AAPL",
+            "qty": 12.5934,
+            "avg_entry_price": 198.559186,
+            "current_price": 198.56,
+            "market_value": 2500.545504,
+            "unrealized_pl": 0.010251,
+            "unrealized_plpc": 4.0995222874e-06,
+            "change_today": 0.0168484662262508
+        }
+    },
+    "timestamp": "2025-05-27 23:28:13"
+}

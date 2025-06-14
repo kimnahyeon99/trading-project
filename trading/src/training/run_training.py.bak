@@ -1,0 +1,1206 @@
+"""
+SAC 모델 학습 실행 스크립트
+- 검증 없이 훈련에만 집중
+- 학습 시간 측정 및 로깅
+- 간단하고 명확한 로그 출력
+- 스텝별 loss 및 진행률 로깅 추가
+"""
+import sys
+import os
+import time
+from datetime import datetime, timedelta
+
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+sys.path.append(project_root)
+
+import argparse
+import torch
+import numpy as np
+from pathlib import Path
+from src.environment.sequential_episode_manager import create_sequential_training_setup
+
+from src.config.ea_teb_config import (
+    DEVICE,
+    HIDDEN_DIM,
+    BATCH_SIZE,
+    NUM_EPISODES,
+    EVALUATE_INTERVAL,
+    SAVE_MODEL_INTERVAL,
+    MAX_STEPS_PER_EPISODE,
+    TARGET_SYMBOLS,
+    LOGGER,
+    INITIAL_BALANCE,
+    overlap_ratio,
+    window_size,
+    WINDOW_SIZE
+)
+from src.data_collection.data_collector import DataCollector
+from src.preprocessing.data_processor import DataProcessor
+from src.environment.trading_env import TradingEnvironment, MultiAssetTradingEnvironment
+from src.models.sac_agent import SACAgent
+from src.utils.utils import create_directory, get_timestamp
+
+episode_actions_history = []
+
+class TrainingTimer:
+    """학습 시간 측정을 위한 클래스"""
+    
+    def __init__(self):
+        self.start_time = None
+        self.episode_start_time = None
+        self.episode_times = []
+        
+    def start_training(self):
+        """전체 학습 시작"""
+        self.start_time = time.time()
+        LOGGER.info(f"🚀 학습 시작: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        
+    def start_episode(self):
+        """에피소드 시작"""
+        self.episode_start_time = time.time()
+        
+    def end_episode(self):
+        """에피소드 종료"""
+        if self.episode_start_time:
+            episode_time = time.time() - self.episode_start_time
+            self.episode_times.append(episode_time)
+            return episode_time
+        return 0
+        
+    def get_training_time(self):
+        """전체 학습 시간 반환"""
+        if self.start_time:
+            return time.time() - self.start_time
+        return 0
+        
+    def get_avg_episode_time(self):
+        """평균 에피소드 시간 반환"""
+        if self.episode_times:
+            return np.mean(self.episode_times)
+        return 0
+        
+    def get_eta(self, current_episode, total_episodes):
+        """남은 시간 추정"""
+        if len(self.episode_times) > 0:
+            avg_time = self.get_avg_episode_time()
+            remaining_episodes = total_episodes - current_episode
+            return remaining_episodes * avg_time
+        return 0
+        
+    def format_time(self, seconds):
+        """시간을 보기 좋게 포맷"""
+        return str(timedelta(seconds=int(seconds)))
+
+def parse_args():
+    """명령줄 인자 파싱"""
+    parser = argparse.ArgumentParser(description='SAC 모델 학습 스크립트')
+    
+    # 데이터 관련 인자
+    parser.add_argument('--symbols', nargs='+', default=None, help='학습에 사용할 주식 심볼 목록')
+    parser.add_argument('--collect_data', action='store_true', help='데이터 수집 여부')
+    
+    # 환경 관련 인자
+    parser.add_argument('--window_size', type=int, default=window_size, help='관측 윈도우 크기')
+    parser.add_argument('--initial_balance', type=float, default=INITIAL_BALANCE, help='초기 자본금')
+    parser.add_argument('--multi_asset', action='store_true', help='다중 자산 환경 사용 여부')
+    
+    # 모델 관련 인자(기본 MLP)
+    parser.add_argument('--hidden_dim', type=int, default=HIDDEN_DIM, help='은닉층 차원')
+    # CNN
+    parser.add_argument('--use_cnn', action='store_true', help='CNN 모델 사용 여부')
+    # LSTM
+    parser.add_argument('--use_lstm', action='store_true', help='LSTM 모델 사용 여부')
+    # 로드 경로
+    parser.add_argument('--load_model', type=str, default=None, help='로드할 모델 경로')
+    
+    # 학습 관련 인자
+    parser.add_argument('--batch_size', type=int, default=BATCH_SIZE, help='배치 크기')
+    parser.add_argument('--num_episodes', type=int, default=NUM_EPISODES, help='학습할 총 에피소드 수')
+    parser.add_argument('--log_interval', type=int, default=EVALUATE_INTERVAL, help='로그 출력 간격')
+    parser.add_argument('--save_interval', type=int, default=SAVE_MODEL_INTERVAL, help='모델 저장 간격')
+    parser.add_argument('--max_steps', type=int, default=MAX_STEPS_PER_EPISODE, help='에피소드당 최대 스텝 수')
+    parser.add_argument("--buffer_type", type=str, choices=["random", "sequential"], default="sequential", help="버퍼 타입 선택(random or sequential)")
+    
+    # 순차적 학습 관련 새 옵션들 추가
+    parser.add_argument('--adaptive_episode_length', action='store_true', default=True, help='적응형 에피소드 길이 사용 (기본값: True)')
+    parser.add_argument('--min_episode_steps', type=int, default=100, help='에피소드 최소 길이')
+    parser.add_argument('--episode_overlap_ratio', type=float, default=overlap_ratio, help='에피소드 간 겹침 비율')
+    parser.add_argument('--force_full_coverage', action='store_true', help='전체 데이터 커버리지 강제 (데이터 손실 최소화)')
+    
+    # 스텝별 로깅 관련 인자 추가
+    parser.add_argument('--step_log_interval', type=int, default=100, help='스텝별 로그 출력 간격')
+    
+    # 로그 'minimal', 'normal', 'detailed'
+    parser.add_argument("--log_level", choices=['minimal', 'normal', 'detailed'], default='normal', help="로그 레벨")
+    return parser.parse_args()
+
+def create_training_environment(results, symbols, args):
+    """개선된 순차적 학습용 환경을 생성"""
+    LOGGER.info("개선된 순차적 학습용 환경 생성 중...")
+    
+    if args.multi_asset:
+        # 다중 자산의 경우 기존 방식 유지 (일단)
+        LOGGER.error("❌ 다중 자산 환경은 아직 구현되지 않았습니다.")
+        LOGGER.info("단일 자산 모드로 실행하세요: ❌ --multi_asset 옵션 제거")
+        return None
+        
+    else:
+        # 단일 자산의 경우 개선된 순차적 환경 생성
+        symbol = symbols[0]
+        LOGGER.info(f"개선된 순차적 단일 자산 트레이딩 환경 생성 중: {symbol}")
+        
+        if symbol not in results:
+            LOGGER.error(f"{symbol} 데이터 처리 결과가 없습니다.")
+            return None
+        
+        if 'train' in results[symbol] and 'featured_data' in results[symbol]:
+            normalized_data = results[symbol]['train']
+            original_data = results[symbol]['featured_data']
+        else:
+            LOGGER.error(f"{symbol} 훈련 데이터가 없습니다.")
+            return None
+        
+        # 기본 환경 생성
+        base_env = TradingEnvironment(
+            data=normalized_data,
+            raw_data=original_data,
+            window_size=args.window_size,
+            initial_balance=args.initial_balance,
+            symbol=symbol,
+            log_level=args.log_level,
+            train_data=True
+        )
+        
+        # ✅ 개선된 순차적 환경으로 래핑
+        try:
+            # 개선된 버전 import 시도, 맨 위에서 임포트 
+            from src.environment.sequential_episode_manager import create_improved_sequential_training_setup
+            
+            sequential_env, episode_manager = create_improved_sequential_training_setup(
+                base_env, 
+                overlap_ratio=0.0,  # 데이터 손실 방지를 위해 겹침 없음
+                adaptive_length=True,  # 적응형 길이 활성화
+                logger=LOGGER
+            )
+            
+            LOGGER.info(f"✅ 개선된 순차적 학습 환경 생성 완료") # 데이터 길이 1000 나눴을때 짜투리까지 학습
+            LOGGER.info(f"   └─ 타입: {type(sequential_env)}")
+            LOGGER.info(f"   └─ 총 에피소드 수: {episode_manager.episode_plan.__len__()}")
+            LOGGER.info(f"   └─ 적응형 길이: {'활성화' if episode_manager.adaptive_length else '비활성화'}")
+            
+            # 커버리지 요약 출력
+            coverage = episode_manager.get_coverage_summary()
+            LOGGER.info(f"   └─ 데이터 커버리지: {coverage['unique_coverage_pct']:.1f}% (고유)")
+            LOGGER.info(f"   └─ 에피소드 길이 범위: {coverage['min_episode_length']}~{coverage['max_episode_length']}")
+            LOGGER.info(f"   └─ 평균 에피소드 길이: {coverage['average_episode_length']:.1f}")
+            
+        except ImportError as e:
+            LOGGER.warning(f"⚠️ 개선된 순차적 환경을 불러올 수 없어 기본 버전을 사용합니다: {e}")
+            
+            # 기본 버전으로 fallback, 맨 위에서 임포트 
+            from src.environment.sequential_episode_manager import create_sequential_training_setup
+            
+            sequential_env, episode_manager = create_sequential_training_setup(
+                base_env, 
+                overlap_ratio=0.0,
+                logger=LOGGER
+            )
+            
+            LOGGER.info(f"✅ 기본 순차적 학습 환경 생성 완료 (fallback)") # 데이터 길이 1000 나눴을때 마지막 에피에서 나머지까지 +@ 스텝 학습
+            LOGGER.info(f"   └─ 총 에피소드 수: {episode_manager.total_episodes}")
+            LOGGER.info(f"   └─ 에피소드 간격: {episode_manager.episode_stride}")
+        
+        return sequential_env
+
+def create_agent(env, args):
+    """SAC 에이전트 생성 (수정된 버전)"""
+    LOGGER.info("SAC 에이전트 생성 중...")
+
+    # 행동 차원 결정
+    if args.multi_asset:
+        action_dim = len(env.envs)
+    else:
+        action_dim = 1
+
+    # 상호 배타적 검증 추가
+    if args.use_cnn and args.use_lstm:
+        LOGGER.error("❌ CNN과 LSTM을 동시에 사용할 수 없습니다.")
+        return None
+
+    # ✅ 모델 타입 먼저 결정
+    if args.use_lstm:
+        model_type = 'lstm'
+        LOGGER.info("[LSTM 사용] LSTM 모델을 사용합니다.")
+    elif args.use_cnn:
+        model_type = 'cnn'
+        LOGGER.info("[CNN 사용] CNN 모델을 사용합니다.")
+    else:
+        model_type = 'mlp'
+        LOGGER.info("[MLP 사용] 기본 MLP 모델을 사용합니다.")
+
+    # 버퍼 타입 로그 추가
+    LOGGER.info(f"[버퍼 타입] {args.buffer_type.upper()} 리플레이 버퍼를 사용합니다.")
+
+    # ✅ 에이전트 생성 시 model_type 파라미터 추가
+    agent = SACAgent(
+        state_dim=None,
+        action_dim=action_dim,
+        hidden_dim=args.hidden_dim,
+        input_shape=(args.window_size, env.feature_dim if not args.multi_asset else list(env.envs.values())[0].feature_dim),
+        use_cnn=args.use_cnn,
+        use_lstm=args.use_lstm,
+        model_type=model_type,  # ✅ 추가된 파라미터
+        buffer_type=args.buffer_type,
+        sequence_length=32
+    )
+
+    # 모델을 디바이스로 이동
+    agent.actor = agent.actor.to(DEVICE)
+    agent.critic = agent.critic.to(DEVICE)
+    agent.critic_target = agent.critic_target.to(DEVICE)
+    
+    # 모델 타입 정보를 에이전트에 저장 (저장 시 사용)
+    agent.model_type = model_type
+    agent.training_symbols = args.symbols if args.symbols else TARGET_SYMBOLS
+
+    # 모델 로드 (선택적)
+    if args.load_model:
+        LOGGER.info(f"모델 로드 중: {args.load_model}")
+        try:
+            agent.load_model(args.load_model)
+            # 로드 후에도 명시적으로 다시 이동 (GPU 로드 시 필요함)
+            agent.actor = agent.actor.to(DEVICE)
+            agent.critic = agent.critic.to(DEVICE)
+            agent.critic_target = agent.critic_target.to(DEVICE)
+            LOGGER.info("모델 로드 성공")
+        except Exception as e:
+            LOGGER.error(f"❌ 모델 로드 실패: {e}")
+            LOGGER.info("✅ 새 모델로 학습을 시작합니다.")
+    
+    LOGGER.info(f"SAC 에이전트 생성 완료 (행동 차원: {action_dim}, 은닉층: {args.hidden_dim})")
+    return agent
+
+# ✅ 추가: 학습 시작 전 환경 검증 함수
+def validate_training_environment(train_env, args):
+    """학습 환경 검증 및 데이터 손실 위험 사전 점검"""
+    LOGGER.info("🔍 학습 환경 검증 중...")
+    
+    # 순차적 환경인지 확인
+    if not hasattr(train_env, 'episode_manager'):
+        LOGGER.warning("⚠️ 순차적 환경이 아닙니다. 데이터 활용률이 낮을 수 있습니다.")
+        return True
+    
+    # 커버리지 분석
+    episode_manager = train_env.episode_manager
+    
+    if hasattr(episode_manager, 'get_coverage_summary'):
+        coverage = episode_manager.get_coverage_summary()
+        
+        LOGGER.info("📊 환경 검증 결과:")
+        LOGGER.info(f"   └─ 총 에피소드 수: {coverage['total_episodes']}")
+        LOGGER.info(f"   └─ 데이터 커버리지: {coverage['unique_coverage_pct']:.1f}%")
+        LOGGER.info(f"   └─ 평균 에피소드 길이: {coverage['average_episode_length']:.1f}")
+        
+        # 경고 및 권장사항
+        if coverage['unique_coverage_pct'] < 95:
+            LOGGER.warning(f"⚠️ 데이터 커버리지가 낮습니다: {coverage['unique_coverage_pct']:.1f}%")
+            LOGGER.info("💡 권장사항:")
+            LOGGER.info("   └─ --adaptive_episode_length 옵션 사용")
+            LOGGER.info("   └─ --max_steps 값 증가")
+            LOGGER.info("   └─ --episode_overlap_ratio 조정")
+        
+        if coverage['total_episodes'] > args.num_episodes:
+            LOGGER.warning(f"⚠️ 계획된 에피소드 수({coverage['total_episodes']})가 학습 에피소드 수({args.num_episodes})보다 많습니다.")
+            LOGGER.info("💡 권장사항: --num_episodes 값을 늘려서 전체 데이터를 활용하세요.")
+        
+        # 에피소드 타입 분포 표시
+        if 'episode_types' in coverage:
+            LOGGER.info("📊 에피소드 타입 분포:")
+            for ep_type, count in coverage['episode_types'].items():
+                percentage = (count / coverage['total_episodes']) * 100
+                LOGGER.info(f"   └─ {ep_type}: {count}개 ({percentage:.1f}%)")
+        
+        LOGGER.info("✅ 환경 검증 완료")
+        return True
+        
+    else:
+        LOGGER.info("✅ 기본 순차적 환경 사용")
+        return True
+
+
+# ✅ 학습 완료 후 데이터 활용률 리포트 생성
+def generate_data_utilization_report(data_coverage_log, args):
+    """데이터 활용률 상세 리포트 생성"""
+    if not data_coverage_log:
+        return
+    
+    LOGGER.info("=" * 80)
+    LOGGER.info("📊 최종 데이터 활용률 리포트")
+    LOGGER.info("=" * 80)
+    
+    # 기본 통계
+    total_episodes = len(data_coverage_log)
+    total_planned = sum(c.get('planned_steps', 0) for c in data_coverage_log)
+    total_actual = sum(c.get('actual_steps', 0) for c in data_coverage_log)
+    
+    if total_planned > 0:
+        overall_utilization = total_actual / total_planned
+        lost_steps = total_planned - total_actual
+        
+        LOGGER.info(f"📈 전체 통계:")
+        LOGGER.info(f"   └─ 총 에피소드: {total_episodes}")
+        LOGGER.info(f"   └─ 계획된 총 스텝: {total_planned:,}")
+        LOGGER.info(f"   └─ 실제 처리 스텝: {total_actual:,}")
+        LOGGER.info(f"   └─ 전체 활용률: {overall_utilization:.1%}")
+        LOGGER.info(f"   └─ 손실된 스텝: {lost_steps:,}")
+        
+        # 활용률 분포
+        utilizations = [c.get('data_utilization', 0) for c in data_coverage_log]
+        if utilizations:
+            avg_util = np.mean(utilizations)
+            min_util = min(utilizations)
+            max_util = max(utilizations)
+            
+            LOGGER.info(f"📊 에피소드별 활용률:")
+            LOGGER.info(f"   └─ 평균: {avg_util:.1%}")
+            LOGGER.info(f"   └─ 범위: {min_util:.1%} ~ {max_util:.1%}")
+            
+            # 문제가 있는 에피소드 찾기
+            low_util_episodes = [i for i, util in enumerate(utilizations) if util < 0.8]
+            if low_util_episodes:
+                LOGGER.warning(f"⚠️ 낮은 활용률 에피소드 ({len(low_util_episodes)}개):")
+                for ep_idx in low_util_episodes[:5]:  # 처음 5개만 표시
+                    util = utilizations[ep_idx]
+                    coverage = data_coverage_log[ep_idx]
+                    LOGGER.warning(f"   └─ Episode {ep_idx+1}: {util:.1%} ({coverage.get('actual_steps', 0)}/{coverage.get('planned_steps', 0)})")
+                if len(low_util_episodes) > 5:
+                    LOGGER.warning(f"   └─ ... 및 {len(low_util_episodes)-5}개 추가")
+        
+        # 권장사항
+        LOGGER.info(f"💡 개선 권장사항:")
+        if overall_utilization < 0.9:
+            LOGGER.info(f"   └─ MAX_STEPS_PER_EPISODE 값을 {int(args.max_steps * 1.5)} 이상으로 증가")
+            LOGGER.info(f"   └─ --adaptive_episode_length 옵션 사용")
+        if overall_utilization < 0.95:
+            LOGGER.info(f"   └─ --force_full_coverage 옵션 고려")
+        if overall_utilization >= 0.95:
+            LOGGER.info(f"   └─ ✅ 우수한 데이터 활용률입니다!")
+    
+    LOGGER.info("=" * 80)
+
+class StepLossTracker:
+    """스텝별 loss 추적을 위한 클래스"""
+    
+    def __init__(self, window_size=100):
+        self.window_size = window_size
+        self.actor_losses = []
+        self.critic_losses = []
+        self.alpha_losses = []
+        self.alpha_values = []
+        self.entropy_values = []
+        
+    def add_stats(self, stats):
+        """통계 추가"""
+        if stats is not None:  # None 체크로 변경
+            self.actor_losses.append(stats.get('actor_loss', 0.0))
+            self.critic_losses.append(stats.get('critic_loss', 0.0))
+            self.alpha_losses.append(stats.get('alpha_loss', 0.0))
+            self.alpha_values.append(stats.get('alpha', 0.0))
+            self.entropy_values.append(stats.get('entropy', 0.0))
+            
+            # 윈도우 크기 유지
+            if len(self.actor_losses) > self.window_size:
+                self.actor_losses.pop(0)
+                self.critic_losses.pop(0)
+                self.alpha_losses.pop(0)
+                self.alpha_values.pop(0)
+                self.entropy_values.pop(0)
+    
+    def get_averages(self):
+        """평균값 반환"""
+        if not self.actor_losses:
+            return {
+                'avg_actor_loss': 0.0,
+                'avg_critic_loss': 0.0,
+                'avg_alpha_loss': 0.0,
+                'avg_alpha': 0.0,
+                'avg_entropy': 0.0,
+                'num_samples': 0
+            }
+        
+        return {
+            'avg_actor_loss': np.mean(self.actor_losses),
+            'avg_critic_loss': np.mean(self.critic_losses),
+            'avg_alpha_loss': np.mean(self.alpha_losses),
+            'avg_alpha': np.mean(self.alpha_values),
+            'avg_entropy': np.mean(self.entropy_values),
+            'num_samples': len(self.actor_losses)
+        }
+    
+    # 얼리스탑 기준
+    def check_convergence(self, episode, min_episodes=100):
+    # def check_convergence(self, episode, min_episodes=1):
+        """얼리스탑 수렴 조건 체크"""
+        if episode < min_episodes:
+            return False, "최소 에피소드 미달성"
+        
+        if len(self.actor_losses) < 20:
+            return False, "데이터 부족"
+        
+        # 최근 20개 샘플 기준
+        recent_alpha = np.mean(self.alpha_values[-20:]) if self.alpha_values else 1.0
+        recent_entropy = np.mean(self.entropy_values[-20:]) if self.entropy_values else 1.0
+        recent_actor_loss = np.mean(np.abs(self.actor_losses[-20:]))
+        
+        # 수렴 조건 체크
+        alpha_converged = recent_alpha < 0.001 # 0이면 탐험성이 죽어버려서 local minimum에 갇힐 위험이 있음
+        entropy_converged = 0.06 < recent_entropy < 0.08
+        loss_converged = recent_actor_loss < 0.001
+    
+        
+        all_converged = alpha_converged and entropy_converged and loss_converged
+        
+        if all_converged:
+            reason = f"수렴 감지 - Alpha:{recent_alpha:.6f}, Entropy:{recent_entropy:.3f}, Loss:{recent_actor_loss:.6f}"
+            return True, reason
+        
+        return False, "수렴 조건 미달성"
+
+def log_step_progress(episode, step, total_episodes, max_episode_steps, 
+                     loss_tracker, timer, args, agent):
+    """스텝별 진행상황 로깅"""
+    
+    # 진행률 계산
+    episode_progress = (step / max_episode_steps) * 100
+    total_progress = ((episode - 1) * 100 + episode_progress) / total_episodes
+    
+    # 평균 loss 가져오기
+    averages = loss_tracker.get_averages()
+    
+    # 시간 정보
+    elapsed_time = timer.get_training_time()
+    eta = timer.get_eta(episode, total_episodes)
+    
+    # 평균 loss 가져오기
+    averages = loss_tracker.get_averages()
+    
+    LOGGER.info("=" * 50)
+    LOGGER.info(f"✅ STEP PROGRESS | Episode {episode}/{total_episodes} | Step {step}/{max_episode_steps}")
+    LOGGER.info("=" * 50)
+    LOGGER.info(f"⏰ 진행률:")
+    LOGGER.info(f"   └─ 에피소드 진행률: {episode_progress:.1f}%")
+    LOGGER.info(f"   └─ 전체 진행률: {total_progress:.1f}%")
+    LOGGER.info(f"   └─ 완료된 에피소드: {episode-1}/{total_episodes}")
+    
+    LOGGER.info(f"⏰ 시간 정보:")
+    LOGGER.info(f"   └─ 경과 시간: {timer.format_time(elapsed_time)}")
+    LOGGER.info(f"   └─ 예상 남은 시간: {timer.format_time(eta)}")
+    
+    LOGGER.info(f"✅ 평균 Loss (최근 {averages['num_samples']}스텝):")
+    LOGGER.info(f"   └─ Actor Loss: {averages['avg_actor_loss']:.6f}")
+    LOGGER.info(f"   └─ Critic Loss: {averages['avg_critic_loss']:.6f}")
+    LOGGER.info(f"   └─ Alpha Loss: {averages['avg_alpha_loss']:.6f}")
+    LOGGER.info(f"   └─ Alpha: {averages['avg_alpha']:.6f}")
+    LOGGER.info(f"   └─ Entropy: {averages['avg_entropy']:.6f}")
+    
+    # 디버깅 정보 추가 제환
+    LOGGER.info(f"🔍 디버깅 정보:")
+    LOGGER.info(f"   └─ 버퍼 크기: {len(agent.replay_buffer):,}")
+    LOGGER.info(f"   └─ 배치 크기: {args.batch_size}")
+    LOGGER.info(f"   └─ 업데이트 카운터: {agent.update_counter}")
+    LOGGER.info(f"   └─ Loss 샘플 수: {averages['num_samples']}")
+    
+    LOGGER.info("=" * 50)
+
+def train_agent_sequential(agent, train_env, args, timer):
+    """순차적 데이터 활용 에이전트 학습"""
+    LOGGER.info("순차적 학습 시작...")
+    global episode_actions_history
+    
+    episode_rewards = []
+    portfolio_values = []
+    shares_history = []
+    data_coverage_log = []
+    
+    # 스텝별 loss 추적기 초기화
+    loss_tracker = StepLossTracker(window_size=args.step_log_interval)
+    global_step_count = 0  # 전체 스텝 카운터
+    
+    for episode in range(args.num_episodes):
+        episode_actions = []
+        timer.start_episode()
+        
+        # 강화된 리셋 로직
+        max_reset_attempts = 3
+        reset_success = False
+
+        for attempt in range(max_reset_attempts):
+            try:
+                state = train_env.reset(episode_num=episode)
+                reset_success = True
+                break
+            except Exception as e:
+                LOGGER.warning(f"⚠️ Episode {episode+1} 리셋 시도 {attempt+1}/{max_reset_attempts} 실패: {e}")
+                if attempt < max_reset_attempts - 1:
+                    time.sleep(0.1)
+                    
+        if not reset_success:
+            LOGGER.error(f"❌ Episode {episode+1} 최종 리셋 실패, 이전 상태로 복구")
+            try:
+                state = train_env.reset(episode_num=max(0, episode-1))
+            except:
+                state = train_env._get_observation()
+
+        episode_reward = 0
+        steps = 0
+        
+        # 안전한 current_step 접근
+        try:
+            if hasattr(train_env, 'base_env') and train_env.base_env:
+                actual_current_step = train_env.base_env.current_step
+            else:
+                actual_current_step = getattr(train_env, 'current_step', 0)
+        except AttributeError:
+            actual_current_step = 0
+            LOGGER.warning("현재 스텝 정보를 가져올 수 없습니다.")
+        
+        # 에피소드 메타정보 가져오기
+        meta_info = getattr(train_env, 'episode_meta_info', {})
+        expected_start = meta_info.get('start_index', 0)
+        
+        LOGGER.info(f"✅ Episode {episode+1} 리셋 완료:")
+        LOGGER.info(f"   └─ 실제 current_step: {actual_current_step}")
+        LOGGER.info(f"   └─ 예상 시작점: {expected_start}")
+        LOGGER.info(f"   └─ 일치 여부: {'✅' if actual_current_step == expected_start else '❌'}")
+        LOGGER.info(f"   └─ 계획된 범위: [{meta_info.get('start_index', 'N/A')}~{meta_info.get('end_index', 'N/A')}]")
+
+        # ✅ 개선된 에피소드 길이 결정 (데이터 손실 방지)
+        planned_length = meta_info.get('actual_length', 1000)
+        is_last_episode = meta_info.get('is_last_in_cycle', False)
+        
+        # 새로운 전략: 긴 에피소드를 청크로 나누어 처리
+        if planned_length > MAX_STEPS_PER_EPISODE:
+            LOGGER.info(f"✅ 긴 에피소드 감지: {planned_length} > {MAX_STEPS_PER_EPISODE}")
+            
+            # 청크 단위로 나누어 처리
+            chunks_needed = (planned_length + MAX_STEPS_PER_EPISODE - 1) // MAX_STEPS_PER_EPISODE
+            LOGGER.info(f"   └─ {chunks_needed}개 청크로 분할 처리 예정")
+            
+            # 현재 에피소드는 첫 번째 청크만 처리
+            # 동적 에피소드 길이 조정
+            planned_length = meta_info.get('actual_length', MAX_STEPS_PER_EPISODE)
+            max_episode_steps = min(planned_length * 1.2, MAX_STEPS_PER_EPISODE * 1.5)  # 20% 여유 + 최대 1.5배
+            remaining_steps = planned_length - MAX_STEPS_PER_EPISODE
+            
+            LOGGER.info(f"   └─ 현재 청크: {max_episode_steps} 스텝")
+            LOGGER.info(f"   └─ 잔여 데이터: {remaining_steps} 스텝 (다음 에피소드에서 처리)")
+            
+        else:
+            # 계획된 길이가 MAX_STEPS 이하인 경우 전체 처리
+            max_episode_steps = planned_length
+            LOGGER.info(f"✅ Episode {episode+1}: {max_episode_steps} 스텝 전체 학습")
+        
+        # 마지막 에피소드는 항상 전체 처리
+        if is_last_episode:
+            max_episode_steps = planned_length
+            LOGGER.info(f"✅ 사이클 마지막 에피소드: {planned_length} 스텝 모두 학습")
+        
+        # 데이터 손실 경고 제거 (이제 손실이 없어야 함)
+        if planned_length > max_episode_steps:
+            remaining_data = planned_length - max_episode_steps
+            LOGGER.info(f"📊 처리 예정: {max_episode_steps}/{planned_length} 스텝")
+            LOGGER.info(f"📊 잔여 데이터: {remaining_data} 스텝 (순차적 환경에서 다음에 처리)")
+        else:
+            LOGGER.info(f"📊 전체 데이터 처리: {max_episode_steps} 스텝")
+            
+        # ✅ 단일 에피소드 진행 루프 (중복 제거됨)
+        done = False
+        while not done and steps < max_episode_steps:
+            # 행동 선택
+            action = agent.select_action(state, evaluate=False)
+            episode_actions.append(action)  # 행동 기록
+            
+            # 환경에서 스텝 실행
+            next_state, reward, done, info = train_env.step(action)
+            
+            # ✅ 경험을 리플레이 버퍼에 추가 (중요!)
+            agent.add_experience(state, action, reward, next_state, done)
+                     
+            # 네트워크 업데이트
+            if len(agent.replay_buffer) > args.batch_size:
+                stats = agent.update_parameters(args.batch_size)
+                loss_tracker.add_stats(stats)
+                
+                # 디버깅을 위한 로그 추가 (step % 100 == 0일 때만)
+                if steps % 100 == 0:
+                    LOGGER.debug(f"Step {steps}: Actor Loss {stats.get('actor_loss', 0):.6f}, "
+                                f"Critic Loss {stats.get('critic_loss', 0):.6f}, "
+                                f"Alpha {stats.get('alpha', 0):.6f}")
+				# 긴급 중단 체크 (Alpha 완전 소멸)
+                if stats.get('alpha', 1.0) < 1e-6:
+                    LOGGER.warning("🚨 Alpha 완전 소멸, 긴급 중단!")
+                    done = True
+                    break
+            else:
+                # 업데이트하지 않는 경우 None 추가
+                loss_tracker.add_stats(None)
+                
+                # 버퍼 크기 로깅 (첫 100스텝 동안만)
+                if steps <= 100:
+                    LOGGER.debug(f"Step {steps}: 버퍼 크기 부족 ({len(agent.replay_buffer)}/{args.batch_size})")
+            
+            # 임시 디버깅 코드 (steps % 50 == 0일 때만)
+            if steps % 50 == 0:
+                LOGGER.info(f"🔍 Step {steps} 디버깅:")
+                LOGGER.info(f"   └─ 버퍼 크기: {len(agent.replay_buffer)}")
+                LOGGER.info(f"   └─ 배치 크기: {args.batch_size}")
+                LOGGER.info(f"   └─ 업데이트 여부: {len(agent.replay_buffer) > args.batch_size}")
+                LOGGER.info(f"   └─ Loss 트래커 샘플 수: {len(loss_tracker.actor_losses)}")
+            
+            episode_reward += reward
+            steps += 1
+            global_step_count += 1
+            state = next_state  # ✅ 상태 업데이트 (중요!)
+            
+            # 스텝별 진행상황 로깅
+            if args.step_log_interval > 0 and steps % args.step_log_interval == 0:
+                log_step_progress(
+                    episode + 1, steps, args.num_episodes, max_episode_steps, 
+                    loss_tracker, timer, args, agent
+                )
+				
+				# 얼리스탑 체크 
+                should_stop, reason = loss_tracker.check_convergence(episode + 1)
+                if should_stop:
+                    LOGGER.info(f"🛑 얼리스탑 발동: {reason}")
+                    done = True
+                    break
+        
+        # ✅ 목표 스텝 도달 로깅
+        if steps >= max_episode_steps:
+            LOGGER.info(f"Episode {episode+1} 목표 스텝({max_episode_steps}) 달성으로 완료")
+            if max_episode_steps == planned_length:
+                LOGGER.info(f"   ✅ 계획된 모든 데이터 학습 완료 (손실 없음)")
+            else:
+                LOGGER.info(f"   📊 청크 처리 완료 ({max_episode_steps}/{planned_length})")
+        
+        # ✅ 에피소드 완료 후 행동 기록 추가 (올바른 위치)
+        episode_actions_history.append(episode_actions)
+        
+        episode_time = timer.end_episode()
+        episode_rewards.append(episode_reward)
+        
+        # 적극적인 메모리 관리
+        if episode % 5 == 0:  # 5 에피소드마다로 단축
+            torch.cuda.empty_cache()
+            if hasattr(torch.cuda, 'reset_peak_memory_stats'):
+                torch.cuda.reset_peak_memory_stats()
+
+        # 매 에피소드마다 가벼운 정리
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
+            
+        # VRAM 사용량 모니터링 (50 에피소드마다)
+        if episode % 50 == 0:
+            allocated = torch.cuda.memory_allocated() / 1024**3
+            reserved = torch.cuda.memory_reserved() / 1024**3
+            LOGGER.info(f"   └─ VRAM 사용량: 할당 {allocated:.2f}GB, 캐시 {reserved:.2f}GB")
+            
+        portfolio_values.append(info.get('portfolio_value', args.initial_balance))
+        shares_history.append(info.get('shares_held', 0))
+        
+        # ✅ 데이터 활용률 계산 및 로깅
+        data_utilization = steps / planned_length if planned_length > 0 else 1.0
+        steps_processed = steps
+        steps_remaining = max(0, planned_length - steps)
+        
+        # 에피소드 종료 시 최종 평균 loss 출력
+        final_averages = loss_tracker.get_averages()
+        LOGGER.info(f"✅ Episode {episode+1} 완료:")
+        LOGGER.info(f"   └─ 에피소드 보상: {episode_reward:.4f}")
+        LOGGER.info(f"   └─ 실행 스텝: {steps_processed}/{max_episode_steps} (목표 대비)")
+        LOGGER.info(f"   └─ 데이터 활용률: {data_utilization:.1%} ({steps_processed}/{planned_length})")
+        if steps_remaining > 0:
+            LOGGER.info(f"   └─ 잔여 데이터: {steps_remaining} 스텝 (다음 사이클에서 처리)")
+        LOGGER.info(f"   └─ 포트폴리오: ${info.get('portfolio_value', args.initial_balance):.2f}")
+        
+        # 리스크 정보 출력(by 나현)
+        if 'risk_limit_exceeded' in info and info['risk_limit_exceeded']:
+            LOGGER.warning(f"   ⚠️ 리스크 한도 초과로 조기 종료")
+        if 'max_drawdown_pct' in info:
+            LOGGER.info(f"   └─ 최대 낙폭: {info['max_drawdown_pct']:.2f}%")
+        if 'daily_loss_pct' in info:
+            LOGGER.info(f"   └─ 일일 손실: {info['daily_loss_pct']:.2f}%")
+        LOGGER.info(f"   └─ 평균 Actor Loss: {final_averages['avg_actor_loss']:.6f}")
+        LOGGER.info(f"   └─ 평균 Critic Loss: {final_averages['avg_critic_loss']:.6f}")
+        LOGGER.info(f"   └─ 평균 Alpha: {final_averages['avg_alpha']:.6f}")
+        LOGGER.info(f"   └─ 에피소드 시간: {episode_time:.2f}초")
+        
+		# 에피소드 완료 시 얼리스탑 체크 나현 코드 수정
+        should_stop, reason = loss_tracker.check_convergence(episode + 1)
+        if should_stop:
+            LOGGER.info(f"🛑 에피소드 완료 후 얼리스탑 발동: {reason}")
+            break
+        # ✅ 데이터 활용률 모니터링 (10 에피소드마다)
+        if episode % 10 == 0 and len(episode_rewards) >= 10:
+            recent_rewards = episode_rewards[-10:]
+            max_reward = max(recent_rewards)
+            min_reward = min(recent_rewards)
+            avg_reward = sum(recent_rewards) / len(recent_rewards)
+            
+            LOGGER.info(f"✅ 최근 10 에피소드 분석:")
+            LOGGER.info(f"   └─ 보상 범위: [{min_reward:.4f} ~ {max_reward:.4f}]")
+            LOGGER.info(f"   └─ 평균 보상: {avg_reward:.4f}")
+            
+            # 데이터 활용률 통계
+            recent_coverage = data_coverage_log[-10:] if len(data_coverage_log) >= 10 else data_coverage_log
+            if recent_coverage:
+                avg_utilization = np.mean([c.get('data_utilization', 1.0) for c in recent_coverage])
+                LOGGER.info(f"   └─ 평균 데이터 활용률: {avg_utilization:.1%}")
+            
+            # 극단적 보상 감지
+            threshold = 100
+            if abs(max_reward) > threshold or abs(min_reward) > threshold:
+                LOGGER.warning(f"⚠️ 극단적 보상 감지! Episode {episode+1}")
+                LOGGER.warning(f"   └─ 최대: {max_reward:.4f}, 최소: {min_reward:.4f}")
+
+        # ✅ 개선된 데이터 커버리지 로깅
+        coverage_info = {
+            'episode': episode,
+            'start_idx': meta_info.get('start_index', 0),
+            'end_idx': meta_info.get('end_index', 0),
+            'planned_steps': planned_length,
+            'actual_steps': steps,
+            'data_utilization': data_utilization,
+            'coverage_pct': meta_info.get('coverage_start_pct', 0)
+        }
+        data_coverage_log.append(coverage_info)
+        
+        # 주기적 로깅
+        if episode % args.log_interval == 0:
+            # 기존 로깅 함수 사용 + 순차적 정보 추가
+            log_training_progress(
+                episode, args, episode_rewards, portfolio_values, 
+                info, agent, timer, shares_history
+            )
+            # 평가 후 메모리 정리
+            torch.cuda.empty_cache()
+            
+            # ✅ 개선된 순차적 학습 정보
+            LOGGER.info("✅ 순차적 학습 정보:")
+            LOGGER.info(f"   └─ 데이터 범위: [{meta_info.get('start_index', 'N/A')}~{meta_info.get('end_index', 'N/A')}]")
+            LOGGER.info(f"   └─ 계획된 길이: {planned_length} steps")
+            LOGGER.info(f"   └─ 실제 처리: {steps} steps")
+            LOGGER.info(f"   └─ 활용률: {data_utilization:.1%}")
+            LOGGER.info(f"   └─ 커버리지: {meta_info.get('coverage_start_pct', 0):.1f}%~{meta_info.get('coverage_end_pct', 0):.1f}%")
+            LOGGER.info(f"   └─ 사이클: {meta_info.get('cycle_number', 0)}.{meta_info.get('episode_in_cycle', 0)}")
+            LOGGER.info(f"   └─ 전체 스텝 수: {global_step_count:,}")
+            
+        elif episode < 5:
+            LOGGER.info(
+                f"Episode {episode+1}: 보상 {episode_reward:.4f}, "
+                f"스텝 {steps}/{planned_length} ({data_utilization:.1%}), "
+                f"포트폴리오 ${info.get('portfolio_value', args.initial_balance):.2f}, "
+                f"데이터 범위 [{meta_info.get('start_index', 'N/A')}~{meta_info.get('end_index', 'N/A')}]"
+            )
+        
+        # 주기적 모델 저장
+        if episode % args.save_interval == 0 and episode > 0:
+            try:
+                model_path = agent.save_model(prefix=f'checkpoint_episode_{episode+1}_')
+                LOGGER.info(f"✅ 체크포인트 모델 저장: {model_path}")
+                torch.cuda.empty_cache()
+                
+            except Exception as e:
+                LOGGER.error(f"❌ 모델 저장 실패: {e}")
+    
+    # ✅ 최종 커버리지 분석 (개선된 버전)
+    if data_coverage_log:
+        total_episodes = len(data_coverage_log)
+        total_planned = sum(c['planned_steps'] for c in data_coverage_log)
+        total_actual = sum(c['actual_steps'] for c in data_coverage_log)
+        overall_utilization = total_actual / total_planned if total_planned > 0 else 0
+        
+        all_starts = [c['start_idx'] for c in data_coverage_log]
+        all_ends = [c['end_idx'] for c in data_coverage_log]
+        total_range = max(all_ends) - min(all_starts) if all_ends and all_starts else 0
+        
+        # 활용률 분포
+        utilizations = [c['data_utilization'] for c in data_coverage_log]
+        min_util = min(utilizations) if utilizations else 0
+        max_util = max(utilizations) if utilizations else 0
+        avg_util = np.mean(utilizations) if utilizations else 0
+        
+        LOGGER.info("=" * 60)
+        LOGGER.info("✅ 최종 순차적 학습 커버리지 분석")
+        LOGGER.info("=" * 60)
+        LOGGER.info(f"총 에피소드: {total_episodes}")
+        LOGGER.info(f"총 스텝 수: {global_step_count:,}")
+        LOGGER.info(f"데이터 범위: [{min(all_starts)}~{max(all_ends)}] ({total_range} steps)")
+        LOGGER.info(f"계획된 총 스텝: {total_planned:,}")
+        LOGGER.info(f"실제 처리 스텝: {total_actual:,}")
+        LOGGER.info(f"전체 데이터 활용률: {overall_utilization:.1%}")
+        LOGGER.info(f"에피소드별 활용률: 최소 {min_util:.1%}, 평균 {avg_util:.1%}, 최대 {max_util:.1%}")
+        
+        # 손실 데이터 분석
+        if overall_utilization < 0.95:  # 95% 미만이면 경고
+            lost_steps = total_planned - total_actual
+            LOGGER.warning(f"⚠️ 데이터 손실 감지: {lost_steps:,} 스텝 ({(1-overall_utilization)*100:.1f}%)")
+            LOGGER.info("💡 개선 제안: MAX_STEPS_PER_EPISODE 값을 늘리거나 청크 처리 로직을 개선하세요.")
+        else:
+            LOGGER.info(f"✅ 우수한 데이터 활용률: {overall_utilization:.1%}")
+        
+        LOGGER.info("=" * 60)
+    
+    LOGGER.info("순차적 학습 완료!")
+	# 6.8 나현 코드 수정
+    if episode < args.num_episodes - 1:
+        LOGGER.info(f"🛑 순차적 학습 얼리스탑 완료! (Episode {episode + 1}/{args.num_episodes})")
+    else:
+        LOGGER.info("✅ 순차적 학습 정상 완료!")
+    return episode_rewards, portfolio_values, shares_history
+
+def analyze_recent_actions(episode_actions_history, num_recent=10):
+    """최근 에피소드들의 행동 패턴 간단 분석"""
+    if not episode_actions_history:
+        return None
+    
+    # 최근 N개 에피소드 선택
+    recent_episodes = episode_actions_history[-num_recent:] if len(episode_actions_history) >= num_recent else episode_actions_history
+    
+    # 모든 행동 합치기
+    all_actions = []
+    for ep_actions in recent_episodes:
+        all_actions.extend(ep_actions)
+    
+    if not all_actions:
+        return None
+    
+    # 행동 분류
+    buy_threshold = 0.1
+    sell_threshold = -0.1
+    
+    buy_count = sum(1 for a in all_actions if a > buy_threshold)
+    sell_count = sum(1 for a in all_actions if a < sell_threshold)
+    hold_count = len(all_actions) - buy_count - sell_count
+    
+    total = len(all_actions)
+    buy_ratio = buy_count / total * 100
+    sell_ratio = sell_count / total * 100
+    hold_ratio = hold_count / total * 100
+    
+    # 평균 행동 강도
+    avg_action = np.mean(all_actions)
+    action_intensity = np.mean(np.abs(all_actions))
+    
+    return {
+        'buy_ratio': buy_ratio,
+        'sell_ratio': sell_ratio,
+        'hold_ratio': hold_ratio,
+        'avg_action': avg_action,
+        'intensity': action_intensity,
+        'episodes_analyzed': len(recent_episodes)
+    }
+
+def log_training_progress(episode, args, episode_rewards, portfolio_values, 
+                         info, agent, timer, shares_history):
+    """학습 진행 상황 로깅 (완전히 수정된 버전)"""
+    
+    # 훈련 성능 계산
+    recent_rewards = episode_rewards[-args.log_interval:] if len(episode_rewards) >= args.log_interval else episode_rewards
+    recent_portfolios = portfolio_values[-args.log_interval:] if len(portfolio_values) >= args.log_interval else portfolio_values
+    recent_shares = shares_history[-args.log_interval:] if len(shares_history) >= args.log_interval else shares_history
+    
+    avg_reward = np.mean(recent_rewards)
+    avg_portfolio = np.mean(recent_portfolios)
+    total_return = (avg_portfolio - args.initial_balance) / args.initial_balance * 100
+    
+    # 안전한 주식 지표 계산
+    current_shares = info.get('shares_held', 0)  
+    
+    if recent_shares:
+        avg_shares = np.mean(recent_shares)
+        min_shares = np.min(recent_shares)
+        max_shares = np.max(recent_shares)
+        
+        # 포지션 타입 결정
+        if abs(current_shares) < 0.001:
+            position_type = "현금 포지션"
+        elif current_shares > avg_shares * 1.2:
+            position_type = "평균 대비 높음"
+        elif current_shares < avg_shares * 0.8:
+            position_type = "평균 대비 낮음"
+        else:
+            position_type = "평균 수준"
+    else:
+        avg_shares = 0
+        min_shares = 0
+        max_shares = 0
+        position_type = "데이터 부족"
+    
+    # 시간 정보
+    elapsed_time = timer.get_training_time()
+    avg_episode_time = timer.get_avg_episode_time()
+    eta = timer.get_eta(episode, args.num_episodes)
+    progress = episode / args.num_episodes * 100
+    current_balance = info.get('balance', 0)  
+
+    # 시간 정보
+    LOGGER.info(f"⏱시간 정보:")
+    LOGGER.info(f"   └─ 경과 시간: {timer.format_time(elapsed_time)}, 평균 에피소드 시간: {avg_episode_time:.2f}초, 예상 남은 시간: {timer.format_time(eta)}")
+    LOGGER.info(f"훈련 성능 (최근 {len(recent_rewards)}개 에피소드):") # 훈련 성능
+    # 학습 통계
+    if hasattr(agent, 'actor_losses') and len(agent.actor_losses) > 0:
+        LOGGER.info(f"학습 통계:")
+        LOGGER.info(f"   └─ Actor Loss: {agent.actor_losses[-1]:.6f}")
+        if hasattr(agent, 'critic_losses') and len(agent.critic_losses) > 0:
+            LOGGER.info(f"   └─ Critic Loss: {agent.critic_losses[-1]:.6f}")
+        if hasattr(agent, 'alpha'):
+            LOGGER.info(f"   └─ Alpha: {agent.alpha.item():.6f}")
+        if hasattr(agent, 'replay_buffer'):
+            LOGGER.info(f"   └─ 버퍼 크기: {len(agent.replay_buffer):,}")
+            
+    LOGGER.info(f"   └─ 수익률: {total_return:.2f}%") # 수익률
+    LOGGER.info(f"   └─ 평균 보상: {avg_reward:.4f}") # 평균 보상
+    LOGGER.info(f"   └─ 현재 현금: ${current_balance:,.2f}") # 현재 현금
+    
+    # 통합된 주식 정보 
+    LOGGER.info(f"   └─ 현재 보유 주식: {current_shares:.4f}")
+    if recent_shares:
+        LOGGER.info(f"   └─ 최근 {len(recent_shares)}회 평균: {avg_shares:.4f} (범위: {min_shares:.2f}~{max_shares:.2f})")
+        LOGGER.info(f"   └─ 포지션 상태: {position_type}")
+    else:
+        LOGGER.info(f"   └─ 보유량 히스토리: 데이터 부족")
+    
+    # 행동 패턴 정보 
+    global episode_actions_history
+    action_pattern = analyze_recent_actions(episode_actions_history, args.log_interval)
+    
+    if action_pattern:
+        LOGGER.info(f"✅ 행동 패턴 (최근 {action_pattern['episodes_analyzed']}개 에피소드):")
+        LOGGER.info(f"   └─ 매수 {action_pattern['buy_ratio']:.1f}% | 매도 {action_pattern['sell_ratio']:.1f}% | 홀드 {action_pattern['hold_ratio']:.1f}%")
+        LOGGER.info(f"   └─ 평균 행동값: {action_pattern['avg_action']:+.3f} | 행동 강도: {action_pattern['intensity']:.3f}")
+        
+        # 지배적 행동 표시
+        if action_pattern['buy_ratio'] > 40:
+            LOGGER.info(f"   └─✅ 성향: 적극적 매수 성향")
+        elif action_pattern['sell_ratio'] > 40:
+            LOGGER.info(f"   └─✅ 성향: 적극적 매도 성향")
+        elif action_pattern['hold_ratio'] > 60:
+            LOGGER.info(f"   └─✅ 성향: 보수적 홀드 성향")
+        else:
+            LOGGER.info(f"   └─✅ 성향: 균형적 거래 성향")
+
+    LOGGER.info("=" * 80)
+
+def main():
+    """메인 함수 (데이터 손실 방지 개선 버전)"""
+    timer = TrainingTimer()
+    timer.start_training()
+    
+    print('=' * 50)
+    LOGGER.info('SAC 모델 학습 시작 (데이터 손실 방지 개선 버전)')
+    
+    # 인자 파싱
+    args = parse_args()
+    
+    # 심볼 목록 설정
+    symbols = args.symbols if args.symbols else TARGET_SYMBOLS
+    
+    LOGGER.info(f"학습 대상 심볼: {symbols}")
+    LOGGER.info(f"학습 설정:")
+    LOGGER.info(f"   └─ 에피소드 수: {args.num_episodes:,}")
+    LOGGER.info(f"   └─ 배치 크기: {args.batch_size}")
+    LOGGER.info(f"   └─ 윈도우 크기: {args.window_size}")
+    LOGGER.info(f"   └─ 초기 자본금: ${args.initial_balance:,.2f}")
+    LOGGER.info(f"   └─ 최대 에피소드 스텝: {args.max_steps}")
+    
+    # ✅ 순차적 학습 관련 설정 로그
+    LOGGER.info(f"✅ 순차적 학습 설정:")
+    LOGGER.info(f"   └─ 적응형 길이: {getattr(args, 'adaptive_episode_length', True)}")
+    LOGGER.info(f"   └─ 최소 에피소드 길이: {getattr(args, 'min_episode_steps', 100)}")
+    LOGGER.info(f"   └─ 에피소드 겹침: {getattr(args, 'episode_overlap_ratio', 0.0):.1%}")
+    LOGGER.info(f"   └─ 데이터 손실 방지: {'활성화' if getattr(args, 'force_full_coverage', False) else '기본값'}")
+    
+    # 데이터 수집
+    LOGGER.info("데이터 수집 중...")
+    collector = DataCollector(symbols=symbols)
+    
+    if args.collect_data:
+        LOGGER.info("새로운 데이터 수집 중...")
+        data = collector.load_and_save()
+    else:
+        LOGGER.info("저장된 데이터 로드 중...")
+        data = collector.load_all_data()
+        
+        if not data:
+            LOGGER.warning("저장된 데이터가 없어 새로 수집합니다.")
+            data = collector.load_and_save()
+    
+    if not data:
+        LOGGER.error("데이터 수집 실패")
+        return
+    
+    LOGGER.info(f"데이터 수집 완료: {len(data)}개 심볼")
+    
+    # 데이터 전처리
+    LOGGER.info("데이터 전처리 중...")
+    processor = DataProcessor(window_size=args.window_size)
+    results = processor.process_all_symbols(data)
+    
+    if not results:
+        LOGGER.error("데이터 전처리 실패")
+        return
+    
+    LOGGER.info(f"데이터 전처리 완료: {len(results)}개 심볼")
+    
+    # ✅ 개선된 환경 생성 (훈련용만)
+    train_env = create_training_environment(results, symbols, args)
+    
+    if train_env is None:
+        LOGGER.error("훈련 환경 생성 실패")
+        return
+    
+    # ✅ 환경 검증 (데이터 손실 위험 사전 점검)
+    validation_success = validate_training_environment(train_env, args)
+    if not validation_success:
+        LOGGER.error("환경 검증 실패")
+        return
+    
+    # 에이전트 생성
+    agent = create_agent(train_env, args)
+
+    if agent is None:
+        LOGGER.error("에이전트 생성 실패")
+        return
+
+    # ✅ 학습 실행 (개선된 버전)
+    LOGGER.info("=" * 60)
+    LOGGER.info("개선된 순차적 학습 시작")
+    LOGGER.info("=" * 60)
+    
+    episode_rewards, portfolio_values, shares_history = train_agent_sequential(agent, train_env, args, timer)
+
+    # ✅ 데이터 활용률 상세 분석
+    if hasattr(train_env, 'episode_manager'):
+        # 학습 완료 후 최종 커버리지 분석
+        episode_manager = train_env.episode_manager
+        
+        if hasattr(episode_manager, 'get_coverage_summary'):
+            final_coverage = episode_manager.get_coverage_summary()
+            
+            LOGGER.info("=" * 80)
+            LOGGER.info("📊 최종 순차적 학습 성과 분석")
+            LOGGER.info("=" * 80)
+            LOGGER.info(f"✅ 데이터 활용률:")
+            LOGGER.info(f"   └─ 고유 커버리지: {final_coverage['unique_coverage_pct']:.1f}%")
+            LOGGER.info(f"   └─ 총 커버리지: {final_coverage['total_coverage_pct']:.1f}%")
+            LOGGER.info(f"   └─ 처리된 에피소드: {len(episode_rewards)}/{final_coverage['total_episodes']}")
+            
+            # 성과 등급 부여
+            if final_coverage['unique_coverage_pct'] >= 98:
+                grade = "EXCELLENT"
+            elif final_coverage['unique_coverage_pct'] >= 95:
+                grade = "VERY GOOD"
+            elif final_coverage['unique_coverage_pct'] >= 90:
+                grade = "GOOD"
+            elif final_coverage['unique_coverage_pct'] >= 80:
+                grade = "FAIR"
+            else:
+                grade = "POOR"
+            
+            LOGGER.info(f"✅ 데이터 활용 등급: {grade}")
+            
+            if final_coverage['unique_coverage_pct'] < 95:
+                LOGGER.info("💡 개선 제안:")
+                LOGGER.info("   └─ 다음 학습 시 --max_steps 값을 늘려보세요")
+                LOGGER.info("   └─ --adaptive_episode_length 옵션을 사용하세요")
+                LOGGER.info("   └─ --num_episodes 값을 늘려 전체 사이클을 완료하세요")
+            
+            LOGGER.info("=" * 80)
+
+    # 최종 모델 저장
+    final_model_path = agent.save_model(
+        save_dir="models",
+        prefix='',  # 접두사 없음
+        model_type=getattr(agent, 'model_type', 'mlp'),
+        symbol=symbols[0] if len(symbols) == 1 else None,
+        symbols=symbols if len(symbols) > 1 else None
+    )
+
+    LOGGER.info(f"최종 모델 저장 완료: {final_model_path}")
+    
+    # ✅ 최종 결과 출력 (개선된 버전)
+    total_time = timer.get_training_time()
+    final_portfolio = portfolio_values[-1] if portfolio_values else args.initial_balance
+    final_return = (final_portfolio - args.initial_balance) / args.initial_balance * 100
+    final_shares = shares_history[-1] if shares_history else 0
+    
+    LOGGER.info("=" * 80)
+    LOGGER.info(f"🎉 학습 완료 - 최종 결과")
+    LOGGER.info("=" * 80)
+    LOGGER.info(f"⏱ 학습 시간:")
+    LOGGER.info(f"   └─ 총 학습 시간: {timer.format_time(total_time)}")
+    LOGGER.info(f"   └─ 평균 에피소드 시간: {timer.get_avg_episode_time():.2f}초")
+    LOGGER.info(f"   └─ 학습된 에피소드: {len(episode_rewards):,}개")
+    LOGGER.info("")
+    LOGGER.info(f"💰 훈련 환경 최종 성능:")
+    LOGGER.info(f"   └─ 최종 포트폴리오: ${final_portfolio:,.2f}")
+    LOGGER.info(f"   └─ 총 수익률: {final_return:.2f}%")
+    LOGGER.info(f"   └─ 최종 보유 주식: {final_shares:.4f}")
+    LOGGER.info(f"   └─ 평균 에피소드 보상: {np.mean(episode_rewards):.4f}")
+    LOGGER.info("")
+    LOGGER.info(f"🤖 최종 학습 통계:")
+    LOGGER.info(f"   └─ 총 학습 스텝: {agent.train_step_counter:,}")
+    LOGGER.info(f"   └─ 최종 버퍼 크기: {len(agent.replay_buffer):,}")
+    LOGGER.info(f"   └─ 최종 Alpha 값: {agent.alpha.item():.6f}")
+    if agent.actor_losses:
+        LOGGER.info(f"   └─ 최종 Actor Loss: {agent.actor_losses[-1]:.6f}")
+        LOGGER.info(f"   └─ 최종 Critic Loss: {agent.critic_losses[-1]:.6f}")
+    
+    # ✅ 데이터 활용률 요약 (간단 버전)
+    if hasattr(train_env, 'episode_manager') and hasattr(train_env.episode_manager, 'get_coverage_summary'):
+        coverage = train_env.episode_manager.get_coverage_summary()
+        LOGGER.info("")
+        LOGGER.info(f"📊 데이터 활용 요약:")
+        LOGGER.info(f"   └─ 고유 데이터 커버리지: {coverage['unique_coverage_pct']:.1f}%")
+        LOGGER.info(f"   └─ 에피소드 길이 범위: {coverage['min_episode_length']}~{coverage['max_episode_length']}")
+        LOGGER.info(f"   └─ 평균 에피소드 길이: {coverage['average_episode_length']:.1f}")
+        
+        if coverage['unique_coverage_pct'] >= 95:
+            LOGGER.info(f"   └─ ✅ 우수한 데이터 활용률!")
+        elif coverage['unique_coverage_pct'] >= 90:
+            LOGGER.info(f"   └─ ⚠️ 양호한 데이터 활용률")
+        else:
+            LOGGER.info(f"   └─ ❌ 개선 필요한 데이터 활용률")
+    
+    LOGGER.info("=" * 80)
+    LOGGER.info(f"🏁 학습 완료: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    
+    # ✅ 다음 단계 안내
+    LOGGER.info("")
+    LOGGER.info("📚 다음 단계:")
+    LOGGER.info("   └─ 평가: run_evaluation.py --model_path [모델경로] --data_type valid")
+    LOGGER.info("   └─ 백테스트: run_backtest.py --model_path [모델경로] --data_type test")
+    LOGGER.info("   └─ 실시간 트레이딩: run_realtime_trading.py --model_path [모델경로]")
+    
+    # 간단한 벤치마크 비교 (Buy & Hold)
+    if len(episode_rewards) > 0:
+        LOGGER.info("")
+        LOGGER.info(f"✅ 성과 비교:")
+        LOGGER.info(f"    └─ SAC 모델 수익률: {final_return:.2f}%")
+        
+        # Buy & Hold 수익률 추정 (첫 번째와 마지막 포트폴리오 값 기준)
+        if len(portfolio_values) >= 2:
+            buy_hold_return = ((portfolio_values[-1] / portfolio_values[0]) - 1) * 100
+            LOGGER.info(f"   └─ Buy & Hold 추정: {buy_hold_return:.2f}%")
+            
+            if final_return > buy_hold_return:
+                outperformance = final_return - buy_hold_return
+                LOGGER.info(f"   └─ ✅ SAC 모델이 {outperformance:.2f}%p 더 우수")
+            else:
+                underperformance = buy_hold_return - final_return
+                LOGGER.info(f"   └─ ❌ Buy & Hold가 {underperformance:.2f}%p 더 우수")
+
+if __name__ == "__main__":
+    main()

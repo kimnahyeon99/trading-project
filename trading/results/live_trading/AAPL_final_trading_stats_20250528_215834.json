@@ -1,0 +1,36 @@
+{
+    "trading_stats": {
+        "start_time": null,
+        "trades": [],
+        "successful_trades": 0,
+        "failed_trades": 0,
+        "initial_balance": 0,
+        "current_balance": 99144.54,
+        "pnl": 99144.54,
+        "daily_start_balance": 0,
+        "session_start_positions": {}
+    },
+    "account_info": {
+        "id": "ad7cb72d-3347-49f6-8db1-540ace75230e",
+        "cash": 99144.54,
+        "portfolio_value": 100148.98,
+        "equity": 100148.98,
+        "buying_power": 399380.08,
+        "status": "ACTIVE",
+        "day_trade_count": 0,
+        "pattern_day_trader": true
+    },
+    "positions": {
+        "AAPL": {
+            "symbol": "AAPL",
+            "qty": 4.9982,
+            "avg_entry_price": 200.085004,
+            "current_price": 201.0,
+            "market_value": 1004.6382,
+            "unrealized_pl": 4.573332,
+            "unrealized_plpc": 0.0045730353563425,
+            "change_today": 0.0039458568503072
+        }
+    },
+    "timestamp": "2025-05-28 21:58:34"
+}

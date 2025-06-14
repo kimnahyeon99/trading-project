@@ -1,0 +1,127 @@
+{
+    "trading_stats": {
+        "start_time": "2025-06-10 01:12:19.951821",
+        "trades": [
+            {
+                "symbol": "TSLA",
+                "side": "sell",
+                "quantity": 0.015625,
+                "price": 294.42,
+                "timestamp": "2025-06-10 01:12:36",
+                "order_id": "d02c7bbe-6d22-462c-abde-20200bb5c7df",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "sell",
+                "quantity": 0.0078125,
+                "price": 294.07,
+                "timestamp": "2025-06-10 01:13:41",
+                "order_id": "e467e87a-0907-48d5-9e29-024454c21635",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "sell",
+                "quantity": 0.00390625,
+                "price": 294.42,
+                "timestamp": "2025-06-10 01:14:46",
+                "order_id": "3ca737d6-fc85-44fa-9a0f-5638878ee876",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "sell",
+                "quantity": 0.001953125,
+                "price": 294.17,
+                "timestamp": "2025-06-10 01:15:51",
+                "order_id": "df5beaff-54ff-4282-8888-d32fdc503ca2",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "sell",
+                "quantity": 0.0009765625,
+                "price": 294.04,
+                "timestamp": "2025-06-10 01:16:57",
+                "order_id": "4f6757ec-1dd6-4e43-8e08-66b4ac745e3c",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "sell",
+                "quantity": 0.0004882815,
+                "price": 296.09,
+                "timestamp": "2025-06-10 01:22:14",
+                "order_id": "753914df-72d9-4bdc-8719-a26b8d2a962c",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "sell",
+                "quantity": 0.000244141,
+                "price": 296.09,
+                "timestamp": "2025-06-10 01:22:28",
+                "order_id": "6a619431-411d-4d77-acc1-54f72eee1deb",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "sell",
+                "quantity": 0.0001220705,
+                "price": 296.47,
+                "timestamp": "2025-06-10 01:23:29",
+                "order_id": "895cb755-e6ab-4e7a-a6b6-5a2583f74645",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "sell",
+                "quantity": 0.000122071,
+                "price": 296.24,
+                "timestamp": "2025-06-10 01:24:35",
+                "order_id": "7d1d88e5-a904-489a-a030-1c6251c1ca2e",
+                "status": "success",
+                "model_type": "CNN"
+            }
+        ],
+        "successful_trades": 9,
+        "failed_trades": 0,
+        "initial_balance": 99988.6,
+        "current_balance": 99997.8,
+        "pnl": 9.19999999999709,
+        "daily_start_balance": 99988.6,
+        "session_start_positions": {
+            "TSLA": {
+                "symbol": "TSLA",
+                "qty": 0.03125,
+                "avg_entry_price": 294.71,
+                "current_price": 294.5,
+                "market_value": 9.203125,
+                "unrealized_pl": -0.006563,
+                "unrealized_plpc": -0.0007126191462729,
+                "change_today": -0.002168462424612
+            }
+        }
+    },
+    "account_info": {
+        "id": "ad7cb72d-3347-49f6-8db1-540ace75230e",
+        "cash": 99997.8,
+        "portfolio_value": 99997.8,
+        "equity": 99997.8,
+        "buying_power": 399993.48,
+        "status": "ACTIVE",
+        "day_trade_count": 0,
+        "pattern_day_trader": true
+    },
+    "positions": {},
+    "timestamp": "2025-06-10 03:42:24"
+}

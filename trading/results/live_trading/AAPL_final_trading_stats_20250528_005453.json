@@ -1,0 +1,85 @@
+{
+    "trading_stats": {
+        "start_time": "2025-05-28 00:48:53.820494",
+        "trades": [
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 2.5054,
+                "price": 199.57,
+                "timestamp": "2025-05-28 00:49:14",
+                "order_id": "740ae639-9990-452a-af25-5388e22fc8f2",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 2.5059,
+                "price": 199.53,
+                "timestamp": "2025-05-28 00:50:25",
+                "order_id": "3206395d-3ee0-42cc-9e83-b7f7c256c1fd",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 2.505,
+                "price": 199.6,
+                "timestamp": "2025-05-28 00:51:35",
+                "order_id": "47f96eb2-015d-49a1-959f-abb8491588b0",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 2.5036,
+                "price": 199.71,
+                "timestamp": "2025-05-28 00:52:45",
+                "order_id": "451b16c3-3166-45ac-ac03-6be66a785e42",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 2.5026,
+                "price": 199.79,
+                "timestamp": "2025-05-28 00:53:56",
+                "order_id": "2c933429-d929-45af-8631-38e1fff39f85",
+                "status": "success",
+                "model_type": "CNN"
+            }
+        ],
+        "successful_trades": 5,
+        "failed_trades": 0,
+        "initial_balance": 86537.11,
+        "current_balance": 84036.64,
+        "pnl": -2500.470000000001
+    },
+    "account_info": {
+        "id": "ad7cb72d-3347-49f6-8db1-540ace75230e",
+        "cash": 84036.64,
+        "portfolio_value": 100106.19,
+        "equity": 100106.19,
+        "buying_power": 184142.83,
+        "status": "ACTIVE",
+        "day_trade_count": 0,
+        "pattern_day_trader": false
+    },
+    "positions": {
+        "AAPL": {
+            "symbol": "AAPL",
+            "qty": 80.4,
+            "avg_entry_price": 199.013465,
+            "current_price": 199.88,
+            "market_value": 16070.352,
+            "unrealized_pl": 69.66944,
+            "unrealized_plpc": 0.0043541542517796,
+            "change_today": 0.0236083371741691
+        }
+    },
+    "timestamp": "2025-05-28 00:54:53"
+}

@@ -1,0 +1,15 @@
+{
+    "api_key": "YOUR_API_KEY_HERE",
+    "secret_key": "YOUR_SECRET_KEY_HERE",
+    "data_feed": "alpaca",
+    "base_url": "https://paper-api.alpaca.markets",
+    "data_url": "wss://stream.data.alpaca.markets/v2/iex",
+    "trading": {
+        "symbols": [
+            "AAPL"
+        ],
+        "max_position_size": 100000,
+        "max_drawdown": 0.05,
+        "model_path": "models/sac_model"
+    }
+}

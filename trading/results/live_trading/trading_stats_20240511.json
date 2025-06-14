@@ -1,0 +1,85 @@
+{
+  "account": {
+    "balance": 10500.25,
+    "available_balance": 8500.75,
+    "margin": 2000.0
+  },
+  "trading_stats": {
+    "initial_balance": 10000.0,
+    "pnl": 500.25,
+    "start_time": "2024-05-01 09:00:00",
+    "trades": [
+      {
+        "timestamp": "2024-05-10 10:15:30",
+        "symbol": "AAPL",
+        "side": "buy",
+        "quantity": 10,
+        "price": 175.85,
+        "status": "success",
+        "pnl": 0
+      },
+      {
+        "timestamp": "2024-05-10 14:22:45",
+        "symbol": "GOOGL",
+        "side": "buy",
+        "quantity": 5,
+        "price": 120.35,
+        "status": "success",
+        "pnl": 0
+      },
+      {
+        "timestamp": "2024-05-11 09:45:12",
+        "symbol": "MSFT",
+        "side": "buy",
+        "quantity": 8,
+        "price": 345.67,
+        "status": "success",
+        "pnl": 0
+      },
+      {
+        "timestamp": "2024-05-11 11:05:20",
+        "symbol": "AAPL",
+        "side": "sell",
+        "quantity": 10,
+        "price": 180.25,
+        "status": "success",
+        "pnl": 44.0
+      }
+    ]
+  },
+  "positions": {
+    "GOOGL": {
+      "symbol": "GOOGL",
+      "quantity": 5,
+      "entry_price": 120.35,
+      "current_price": 122.50,
+      "market_value": 612.50,
+      "unrealized_pnl": 10.75
+    },
+    "MSFT": {
+      "symbol": "MSFT",
+      "quantity": 8,
+      "entry_price": 345.67,
+      "current_price": 350.25,
+      "market_value": 2802.00,
+      "unrealized_pnl": 36.64
+    }
+  },
+  "open_orders": {
+    "order_12345": {
+      "order_id": "order_12345",
+      "symbol": "AMZN",
+      "side": "buy",
+      "quantity": 3,
+      "price": 135.75,
+      "create_time": "2024-05-11 10:30:15",
+      "status": "open"
+    }
+  },
+  "portfolio_values": [10000.0, 10050.25, 10120.75, 10180.30, 10250.45, 10300.10, 10420.50, 10500.25],
+  "timestamps": ["2024-05-01", "2024-05-03", "2024-05-05", "2024-05-07", "2024-05-08", "2024-05-09", "2024-05-10", "2024-05-11"],
+  "returns": [0.0, 0.005, 0.0121, 0.018, 0.025, 0.03, 0.042, 0.05],
+  "drawdowns": [0.0, 0.001, 0.003, 0.002, 0.005, 0.004, 0.001, 0.0],
+  "last_update": "2024-05-11 11:22:35",
+  "running": true
+} 

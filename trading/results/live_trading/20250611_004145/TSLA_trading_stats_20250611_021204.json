@@ -1,0 +1,878 @@
+{
+    "trading_stats": {
+        "start_time": "2025-06-11 00:42:00.688933",
+        "trades": [
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5708,
+                "price": 318.31,
+                "timestamp": "2025-06-11 00:42:16",
+                "order_id": "4d1c9d8a-0cfa-48c9-a324-53b4ef5250ed",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5698,
+                "price": 318.51,
+                "timestamp": "2025-06-11 00:43:21",
+                "order_id": "d4114b08-94fa-4c5a-a1f9-e67ec2599e68",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5691,
+                "price": 318.66,
+                "timestamp": "2025-06-11 00:44:27",
+                "order_id": "cfa22896-395f-46f8-bc87-d66bf5550d73",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5671,
+                "price": 319.06,
+                "timestamp": "2025-06-11 00:45:32",
+                "order_id": "eb6c6c2f-e5eb-4ca8-8141-0df360dcb70e",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.568,
+                "price": 318.875,
+                "timestamp": "2025-06-11 00:46:37",
+                "order_id": "5ac08486-e020-449f-bfa3-a23cdb1c817b",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5695,
+                "price": 318.57,
+                "timestamp": "2025-06-11 00:47:42",
+                "order_id": "cf398ed3-65bf-4d46-a404-3896dcd227a6",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5684,
+                "price": 318.8,
+                "timestamp": "2025-06-11 00:48:48",
+                "order_id": "4a52e288-9104-488f-9c65-de05f3817bb5",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5684,
+                "price": 318.79,
+                "timestamp": "2025-06-11 00:49:53",
+                "order_id": "4fd032a9-c65e-4d8f-a128-81bf270ad9c1",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5698,
+                "price": 318.52,
+                "timestamp": "2025-06-11 00:50:58",
+                "order_id": "adc6cfe1-41e3-4cf5-a993-abfc817193ad",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5707,
+                "price": 318.33,
+                "timestamp": "2025-06-11 00:52:03",
+                "order_id": "385db577-902f-4edf-bc9f-f45c0bbe322d",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5647,
+                "price": 319.55,
+                "timestamp": "2025-06-11 00:53:09",
+                "order_id": "d6106d40-0ab2-4d29-8fb5-96144ef71dad",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5638,
+                "price": 319.74,
+                "timestamp": "2025-06-11 00:54:14",
+                "order_id": "c025d2ee-87b7-48d0-b362-876b3716e04f",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5661,
+                "price": 319.26,
+                "timestamp": "2025-06-11 00:55:19",
+                "order_id": "5572a819-8ed7-43c6-a3bb-efb2c3f6e821",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5674,
+                "price": 318.99,
+                "timestamp": "2025-06-11 00:56:25",
+                "order_id": "5923f76c-f362-4879-8631-807cda81b9b6",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5688,
+                "price": 318.71,
+                "timestamp": "2025-06-11 00:57:30",
+                "order_id": "338c0f8e-e913-4507-a4fe-e8ed15030b4c",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5695,
+                "price": 318.57,
+                "timestamp": "2025-06-11 00:58:35",
+                "order_id": "1fa371a3-63c6-45fb-a0c8-f8bf0326cfa3",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5688,
+                "price": 318.72,
+                "timestamp": "2025-06-11 00:59:41",
+                "order_id": "8efff2fb-2458-4285-af8e-e9d61f9b32ef",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5674,
+                "price": 319.0,
+                "timestamp": "2025-06-11 01:00:46",
+                "order_id": "bb669906-0627-407b-b1e9-3be473c190d3",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5693,
+                "price": 318.61,
+                "timestamp": "2025-06-11 01:01:51",
+                "order_id": "5f658802-7aa8-4ae1-8ef8-6a43bd0e994c",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5678,
+                "price": 318.91,
+                "timestamp": "2025-06-11 01:02:56",
+                "order_id": "e0cac6aa-f325-4960-923b-8d5ece2ebc1e",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5685,
+                "price": 318.77,
+                "timestamp": "2025-06-11 01:04:02",
+                "order_id": "30e4e078-df0c-4571-b7cd-f23e57a793af",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.57,
+                "price": 318.48,
+                "timestamp": "2025-06-11 01:05:07",
+                "order_id": "e1c1ecb5-1f81-4081-bffb-6567e96ef7ba",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5682,
+                "price": 318.83,
+                "timestamp": "2025-06-11 01:06:12",
+                "order_id": "1aeed001-c67f-46f9-b0be-efe59196a30d",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5663,
+                "price": 319.23,
+                "timestamp": "2025-06-11 01:07:18",
+                "order_id": "98c7bbc4-1295-44e5-a21f-a11244c77687",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5683,
+                "price": 318.82,
+                "timestamp": "2025-06-11 01:08:23",
+                "order_id": "deac2a7f-890b-4432-b603-c43c0ecdd75c",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5661,
+                "price": 319.27,
+                "timestamp": "2025-06-11 01:09:28",
+                "order_id": "eba4ef54-bb85-4add-98f1-6cac2ec16f31",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5662,
+                "price": 319.24,
+                "timestamp": "2025-06-11 01:10:33",
+                "order_id": "de776b2e-2977-47ac-901e-eae0cd15e88c",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.566,
+                "price": 319.285,
+                "timestamp": "2025-06-11 01:11:39",
+                "order_id": "def1c723-9540-4605-8c44-96701c8d8621",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5671,
+                "price": 319.07,
+                "timestamp": "2025-06-11 01:12:44",
+                "order_id": "1ec7c7dd-4249-4d02-a42a-d6857cfa0d08",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5684,
+                "price": 318.8,
+                "timestamp": "2025-06-11 01:13:49",
+                "order_id": "35e1ff5c-803c-4a67-9fb4-21642fede886",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5699,
+                "price": 318.5,
+                "timestamp": "2025-06-11 01:14:55",
+                "order_id": "5d753633-89e2-4566-bab2-bd5252d63c42",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5683,
+                "price": 318.81,
+                "timestamp": "2025-06-11 01:16:00",
+                "order_id": "b2cc8a46-ba50-46f9-8f74-bae50bd3676c",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5689,
+                "price": 318.7,
+                "timestamp": "2025-06-11 01:17:05",
+                "order_id": "35794c89-28b5-4bcd-b9e8-ad669c7718ed",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5722,
+                "price": 318.03,
+                "timestamp": "2025-06-11 01:18:11",
+                "order_id": "9eb3142e-f53a-46eb-8ab1-6213456823cd",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5715,
+                "price": 318.16,
+                "timestamp": "2025-06-11 01:19:16",
+                "order_id": "5bed7d7c-b78d-4774-b04c-81c1bf34fa86",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5724,
+                "price": 317.99,
+                "timestamp": "2025-06-11 01:20:21",
+                "order_id": "9be135de-0ea9-46b8-a83f-ea902b637a22",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5722,
+                "price": 318.02,
+                "timestamp": "2025-06-11 01:21:27",
+                "order_id": "cae362e3-afe5-4ea4-893b-7ae59a807fa1",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.567,
+                "price": 318.22,
+                "timestamp": "2025-06-11 01:22:32",
+                "order_id": "10d16ffe-0d46-4aa4-b39d-ac013fe27a30",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5602,
+                "price": 317.86,
+                "timestamp": "2025-06-11 01:23:37",
+                "order_id": "a2e92065-d679-466a-9e18-3dff35e9de68",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5582,
+                "price": 317.96,
+                "timestamp": "2025-06-11 01:24:42",
+                "order_id": "a67551f8-47f7-4603-bb8e-3e74e2353719",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5526,
+                "price": 318.13,
+                "timestamp": "2025-06-11 01:25:48",
+                "order_id": "fe51ddf5-6d3f-43cc-9450-1366dc4b6187",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5472,
+                "price": 318.14,
+                "timestamp": "2025-06-11 01:26:53",
+                "order_id": "fd1f37c5-56b2-4947-960b-073200b26d50",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5411,
+                "price": 318.22,
+                "timestamp": "2025-06-11 01:27:58",
+                "order_id": "f37e962a-ef7b-4e07-b665-d4af8f06e150",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.524,
+                "price": 318.17,
+                "timestamp": "2025-06-11 01:29:04",
+                "order_id": "790b91d2-5068-49d4-8f2c-012ce0ac055a",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5275,
+                "price": 318.33,
+                "timestamp": "2025-06-11 01:30:09",
+                "order_id": "43a5a13a-7bbf-426f-b065-ea238c7c4d33",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5237,
+                "price": 318.3,
+                "timestamp": "2025-06-11 01:31:14",
+                "order_id": "bcb48020-5ad4-4c65-a38c-3fc841f1e379",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5118,
+                "price": 318.65,
+                "timestamp": "2025-06-11 01:32:20",
+                "order_id": "c699be49-81d7-47a7-be8e-9e8602e2fe18",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5019,
+                "price": 319.03,
+                "timestamp": "2025-06-11 01:33:26",
+                "order_id": "a0ab75c0-bb3c-40c1-9633-256d0cb08754",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5334,
+                "price": 318.86,
+                "timestamp": "2025-06-11 01:34:31",
+                "order_id": "46a6ffc7-aa82-44f1-8860-148ab3b41d19",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5262,
+                "price": 319.27,
+                "timestamp": "2025-06-11 01:35:36",
+                "order_id": "117e9be9-1f6d-4a95-aa9e-4cb0fe4f1b0e",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.5202,
+                "price": 319.23,
+                "timestamp": "2025-06-11 01:36:42",
+                "order_id": "29f24e9c-2b23-4b7a-95dc-2f054a76e8e8",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.4995,
+                "price": 319.07,
+                "timestamp": "2025-06-11 01:37:47",
+                "order_id": "720f46aa-8e18-40a5-a9db-6b3fa4b55cf2",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.4994,
+                "price": 318.82,
+                "timestamp": "2025-06-11 01:38:52",
+                "order_id": "970f1cab-fc1a-4d19-ad8a-a88e887fcedb",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.4891,
+                "price": 318.63,
+                "timestamp": "2025-06-11 01:39:57",
+                "order_id": "9243858b-479d-453a-98dd-d9ecc35cb62b",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.4882,
+                "price": 318.34,
+                "timestamp": "2025-06-11 01:41:03",
+                "order_id": "fc6707bd-0324-47d4-940a-06cca657f377",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.4827,
+                "price": 318.74,
+                "timestamp": "2025-06-11 01:42:08",
+                "order_id": "7f78d358-6cbb-4901-973a-25090cae937f",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.4783,
+                "price": 318.73,
+                "timestamp": "2025-06-11 01:43:13",
+                "order_id": "d73e4b35-6321-4c74-808a-f37f5d33e23b",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.4591,
+                "price": 318.56,
+                "timestamp": "2025-06-11 01:44:19",
+                "order_id": "4fd766cf-3e63-47af-bb48-6f34ba0f4038",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.4575,
+                "price": 318.22,
+                "timestamp": "2025-06-11 01:45:24",
+                "order_id": "9c851948-524d-4eaa-b2d9-b739f137b693",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.4604,
+                "price": 317.91,
+                "timestamp": "2025-06-11 01:46:29",
+                "order_id": "89d3118e-c6e1-4d6e-9195-cd06af92c092",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.4561,
+                "price": 318.18,
+                "timestamp": "2025-06-11 01:47:35",
+                "order_id": "ef9d0cac-e8d7-44db-b6f9-e2b20caf1069",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.4516,
+                "price": 318.19,
+                "timestamp": "2025-06-11 01:48:40",
+                "order_id": "a2577686-6a3a-4bb3-972f-1a991c45c3c9",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.4476,
+                "price": 317.83,
+                "timestamp": "2025-06-11 01:49:45",
+                "order_id": "be5f6c9f-cc75-46a9-8c88-a02702d4b65b",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.4413,
+                "price": 317.54,
+                "timestamp": "2025-06-11 01:50:51",
+                "order_id": "57ddbbd6-cf55-4f5e-b759-42b553fe58ab",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.442,
+                "price": 317.76,
+                "timestamp": "2025-06-11 01:51:56",
+                "order_id": "9fd8d53e-3989-4f44-8d0f-f1b9c571a670",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.4359,
+                "price": 317.71,
+                "timestamp": "2025-06-11 01:53:01",
+                "order_id": "7bbd7083-8330-4773-8e6e-af33d9bd3cd2",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.4254,
+                "price": 318.12,
+                "timestamp": "2025-06-11 01:54:07",
+                "order_id": "68a2835d-6334-4b3d-bed4-dbdcdb265349",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.4179,
+                "price": 317.99,
+                "timestamp": "2025-06-11 01:55:12",
+                "order_id": "1fca9412-c120-407f-8714-d7d231b14b9b",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.4097,
+                "price": 317.85,
+                "timestamp": "2025-06-11 01:56:17",
+                "order_id": "a4a1ffb7-e489-4991-8f40-adcae5b28645",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.4029,
+                "price": 317.38,
+                "timestamp": "2025-06-11 01:57:23",
+                "order_id": "74f588a1-2ebc-413c-99d5-374cd478d53b",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.4001,
+                "price": 317.09,
+                "timestamp": "2025-06-11 01:58:28",
+                "order_id": "e9775e5f-8537-4ece-ada8-846edc38950d",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.3931,
+                "price": 317.14,
+                "timestamp": "2025-06-11 01:59:34",
+                "order_id": "fa6e6cf9-4cf3-4b63-8bc5-ef7fe823c082",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.3854,
+                "price": 317.23,
+                "timestamp": "2025-06-11 02:00:39",
+                "order_id": "1b7c3211-bac2-4ebc-9078-c2917de31be4",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.3813,
+                "price": 316.58,
+                "timestamp": "2025-06-11 02:01:44",
+                "order_id": "ac6a4d5d-8afb-4a55-b33d-0f340bf1677a",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.3749,
+                "price": 316.44,
+                "timestamp": "2025-06-11 02:02:50",
+                "order_id": "32f4be78-6747-45ad-9aee-e03c303b59f7",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.3676,
+                "price": 316.59,
+                "timestamp": "2025-06-11 02:03:55",
+                "order_id": "c19d3d09-6e3a-4031-8c66-f6a08e2a23d2",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.3591,
+                "price": 316.96,
+                "timestamp": "2025-06-11 02:05:00",
+                "order_id": "fa6e3d4a-411d-4cb7-8720-2e56bdb68057",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.3539,
+                "price": 316.23,
+                "timestamp": "2025-06-11 02:06:06",
+                "order_id": "2531d25c-0f89-41fe-a700-0dca96a0aa07",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.3477,
+                "price": 316.49,
+                "timestamp": "2025-06-11 02:07:11",
+                "order_id": "447fd859-7766-44ff-8d42-fbc2ff725cb0",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.3449,
+                "price": 317.17,
+                "timestamp": "2025-06-11 02:08:16",
+                "order_id": "8cae7d8e-ab69-402c-ba01-4e5a352415f9",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.3353,
+                "price": 317.25,
+                "timestamp": "2025-06-11 02:09:22",
+                "order_id": "bfbb361a-6c92-40ad-b16b-eda7ea213c99",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.3291,
+                "price": 317.38,
+                "timestamp": "2025-06-11 02:10:27",
+                "order_id": "fa1f142a-6907-462b-848a-2765b10e3ef4",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 1.3192,
+                "price": 317.54,
+                "timestamp": "2025-06-11 02:11:32",
+                "order_id": "6339fb96-296c-4db9-9de2-44adf749e8d3",
+                "status": "success",
+                "model_type": "LSTM"
+            }
+        ],
+        "successful_trades": 83,
+        "failed_trades": 0,
+        "initial_balance": 97052.1,
+        "current_balance": 57303.72,
+        "pnl": -39748.380000000005,
+        "daily_start_balance": 97052.1,
+        "session_start_positions": {
+            "TSLA": {
+                "symbol": "TSLA",
+                "qty": 10.24404375,
+                "avg_entry_price": 315.553125,
+                "current_price": 318.3568,
+                "market_value": 3261.260987,
+                "unrealized_pl": 28.720974,
+                "unrealized_plpc": 0.0088849554481911,
+                "change_today": 0.0316831939853523
+            }
+        }
+    },
+    "account_info": {
+        "id": "ad7cb72d-3347-49f6-8db1-540ace75230e",
+        "cash": 57303.72,
+        "portfolio_value": 100212.63,
+        "equity": 100212.63,
+        "buying_power": 356980.17,
+        "status": "ACTIVE",
+        "day_trade_count": 0,
+        "pattern_day_trader": true
+    },
+    "positions": {
+        "TSLA": {
+            "symbol": "TSLA",
+            "qty": 135.11094375,
+            "avg_entry_price": 318.115876,
+            "current_price": 317.55,
+            "market_value": 42904.480188,
+            "unrealized_pl": -76.456102,
+            "unrealized_plpc": -0.001778837517269,
+            "change_today": 0.029068636982306
+        }
+    },
+    "timestamp": "2025-06-11 02:12:05"
+}

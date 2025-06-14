@@ -1,0 +1,21 @@
+{
+    "report_date": "2025-05-19 13:40:34",
+    "portfolio_summary": {
+        "initial_balance": 10000,
+        "final_value": 0.01,
+        "total_return": -0.999999,
+        "annual_return": -0.021175647771831008,
+        "trading_days": 162664,
+        "start_date": null,
+        "end_date": null
+    },
+    "risk_metrics": {
+        "sharpe_ratio": 0.0,
+        "max_drawdown": -0.9999998384260546,
+        "annual_volatility": 0.0
+    },
+    "trading_summary": {
+        "total_trades": 0,
+        "win_rate": 0.0,
+        "avg_trade_return": 0.0,
+        "max_trade_return": 

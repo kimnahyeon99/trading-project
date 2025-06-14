@@ -1,0 +1,25 @@
+{
+    "trading_stats": {
+        "start_time": "2025-06-10 00:35:49.759581",
+        "trades": [],
+        "successful_trades": 0,
+        "failed_trades": 0,
+        "initial_balance": 99997.9,
+        "current_balance": 99997.9,
+        "pnl": 0.0,
+        "daily_start_balance": 99997.9,
+        "session_start_positions": {}
+    },
+    "account_info": {
+        "id": "ad7cb72d-3347-49f6-8db1-540ace75230e",
+        "cash": 99997.9,
+        "portfolio_value": 99997.9,
+        "equity": 99997.9,
+        "buying_power": 399993.48,
+        "status": "ACTIVE",
+        "day_trade_count": 0,
+        "pattern_day_trader": true
+    },
+    "positions": {},
+    "timestamp": "2025-06-10 00:49:01"
+}

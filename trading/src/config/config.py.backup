@@ -1,0 +1,400 @@
+"""
+SAC 트레이딩 시스템 설정 파일 (안전한 테스트용)
+"""
+import os
+import logging
+import torch
+from datetime import datetime
+from pathlib import Path
+
+# 프로젝트 루트 디렉토리
+ROOT_DIR = Path(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
+# 데이터 관련 설정
+DATA_DIR = ROOT_DIR / "data"
+LOGS_DIR = ROOT_DIR / "logs"
+MODELS_DIR = ROOT_DIR / "models"
+RESULTS_DIR = ROOT_DIR / "results"
+
+# ========================================
+# 🧪 테스트용 안전 설정 (AAPL만 사용)
+# ========================================
+
+# 테스트 대상 주식 종목 (위험 최소화를 위해 AAPL만)
+TARGET_SYMBOLS = ['AAPL']  # 테스트용: 애플만
+
+# 전체 주식 종목 리스트 (나중에 사용할 수 있도록 보관)
+ALL_SYMBOLS = [
+    'AAPL','MSFT','GOOGL','GOOG','AMZN','NVDA','META','TSLA'
+]
+
+# 실시간 트레이딩 설정 (매우 안전하게 - AAPL만 활성화)
+ACTIVE_TRADING_SYMBOLS = {
+    'AAPL': {
+        'model_path': 'models/sac_aapl_final_20241120_143022',
+        'enabled': True,
+        'max_position_size': 0.01,  # ⚠️ 1%로 매우 낮게 설정 (기존 15% → 1%)
+        'trading_interval': 600,    # ⚠️ 10분으로 늘림 (기존 5분 → 10분)
+    },
+    # 다른 모든 종목은 비활성화 (테스트 중)
+    'MSFT': {
+        'model_path': 'models/sac_msft_final_20241120_143022', 
+        'enabled': False,  # ⚠️ 테스트 중 비활성화
+        'max_position_size': 0.01,
+        'trading_interval': 600,
+    },
+    'NVDA': {
+        'model_path': 'models/sac_nvda_final_20241120_143022',
+        'enabled': False,  # ⚠️ 테스트 중 비활성화
+        'max_position_size': 0.01,
+        'trading_interval': 600,
+    },
+    'GOOGL': {
+        'model_path': 'models/sac_googl_final_20241120_143022',
+        'enabled': False,
+        'max_position_size': 0.01,
+        'trading_interval': 600,
+    },
+    'AMZN': {
+        'model_path': 'models/sac_amzn_final_20241120_143022',
+        'enabled': False,
+        'max_position_size': 0.01,
+        'trading_interval': 600,
+    },
+    'META': {
+        'model_path': 'models/sac_meta_final_20241120_143022',
+        'enabled': False,
+        'max_position_size': 0.01,
+        'trading_interval': 600,
+    },
+    'TSLA': {
+        'model_path': 'models/sac_tsla_final_20241120_143022',
+        'enabled': False,
+        'max_position_size': 0.01,
+        'trading_interval': 600,
+    },
+}
+
+# # 현재 활성화된 트레이딩 종목들만 추출
+# TRADING_SYMBOLS = [symbol for symbol, config in ACTIVE_TRADING_SYMBOLS.items() if config['enabled']]
+
+# 테스트용으로 직접 설정
+TRADING_SYMBOLS = ['AAPL']
+
+# ========================================
+# 🛡️ 매우 보수적인 리스크 관리 설정
+# ========================================
+
+GLOBAL_MAX_EXPOSURE = 0.05  # ⚠️ 전체 계좌의 5%까지만 투자 (기존 80% → 5%)
+MAX_DRAWDOWN = 0.02         # ⚠️ 최대 2% 낙폭 허용 (기존 5% → 2%)
+MAX_DAILY_LOSS = 0.01       # ⚠️ 일일 최대 손실 1% (기존 3% → 1%)
+EMERGENCY_STOP_LOSS = 0.03  # ⚠️ 응급 손절 3% (기존 10% → 3%)
+
+# 개별 종목 기본 설정 (매우 보수적)
+DEFAULT_SYMBOL_CONFIG = {
+    'max_position_size': 0.01,      # ⚠️ 1%로 매우 낮게 (기존 10% → 1%)
+    'trading_interval': 600,        # ⚠️ 10분 간격 (기존 5분 → 10분)
+    'min_trade_amount': 10.0,       # ⚠️ 최소 거래 금액 $10 (기존 $100 → $10)
+    'max_trade_amount': 100.0,      # ⚠️ 최대 거래 금액 $100 (기존 $2000 → $100)
+}
+
+# ========================================
+# 🔒 추가 안전 설정
+# ========================================
+
+# 실시간 트레이딩 안전 설정
+SAFE_TRADING_CONFIG = {
+    'paper_trading_only': True,           # 페이퍼 트레이딩만 허용
+    'max_daily_trades': 3,                # 하루 최대 3회 거래만
+    'min_time_between_trades': 1200,      # 20분마다 최대 1회 거래
+    'debug_mode': True,                   # 디버그 모드 활성화
+    'log_all_decisions': True,            # 모든 의사결정 로깅
+    'require_manual_approval': False,     # 자동 거래 (True로 하면 수동 승인 필요)
+}
+
+# 데이터 수집 설정
+DATA_COLLECTION_CONFIG = {
+    'interval_seconds': 600,              # 10분마다 데이터 수집
+    'max_data_age_minutes': 15,           # 15분 이상 된 데이터는 사용 안 함
+    'retry_on_failure': True,
+    'cache_data': True,
+}
+
+# 알림 설정
+NOTIFICATION_CONFIG = {
+    'send_trade_notifications': True,
+    'send_error_notifications': True,
+    'notification_method': 'log',
+}
+
+# ========================================
+# 기존 설정들 (대부분 유지)
+# ========================================
+
+# TimescaleDB 데이터베이스 설정 (기존 유지)
+DB_USER = "postgres"
+DB_PASSWORD = "mysecretpassword"
+DB_HOST = "192.168.40.193"
+DB_PORT = 5432
+DB_NAME = "mydb"
+DB_SCHEMA = "public"
+DB_TABLE_PREFIX = "ticker_"
+DB_POOL_SIZE = 5
+DB_TIMEOUT = 30
+DB_MAX_OVERFLOW = 10
+DB_RETRY_COUNT = 3
+DB_RETRY_DELAY = 5
+
+# 데이터 수집 설정
+DATA_START_DATE = "2023-01-01"
+
+# 데이터 전처리 설정
+WINDOW_SIZE = 30
+TRAIN_RATIO = 0.7
+VALID_RATIO = 0.15
+TEST_RATIO = 0.15
+
+# 트레이딩 환경 설정
+INITIAL_BALANCE = 100000.0  # 페이퍼 트레이딩 초기 자본금
+MAX_TRADING_UNITS = 10
+TRANSACTION_FEE_PERCENT = 0.001
+
+# SAC 모델 하이퍼파라미터
+HIDDEN_DIM = 256
+LEARNING_RATE_ACTOR = 3e-4
+LEARNING_RATE_CRITIC = 3e-4
+LEARNING_RATE_ALPHA = 3e-4
+GAMMA = 0.99
+TAU = 0.005
+ALPHA_INIT = 0.2
+TARGET_UPDATE_INTERVAL = 1
+REPLAY_BUFFER_SIZE = 10000000
+
+# 학습 설정
+BATCH_SIZE = 256
+NUM_EPISODES = 1000
+EVALUATE_INTERVAL = 10
+SAVE_MODEL_INTERVAL = 10
+MAX_STEPS_PER_EPISODE = 1000
+
+# 장치 설정
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# ========================================
+# 🔑 알파카 API 설정 (당신의 키 사용)
+# ========================================
+
+API_KEY = os.getenv("APCA_API_KEY_ID", "PK5SQ65O444Z6PRDV4UI")
+API_SECRET = os.getenv("APCA_API_SECRET_KEY", "GIavNSovfJIwAnVZC14DI73pBhNBcAuY2CGhOKl5")
+BASE_URL = "https://paper-api.alpaca.markets"  # 페이퍼 트레이딩 URL
+DATA_FEED = 'iex'  # 무료 데이터 피드
+DEBUG = True       # ⚠️ 디버그 모드 활성화
+MAX_RETRIES = 5    # 재시도 횟수 증가
+
+# 백테스트 설정
+BACKTEST_START_DATE = "2022-01-01"
+BACKTEST_END_DATE = "2023-01-01"
+
+# ========================================
+# 로깅 설정
+# ========================================
+
+def setup_logger(name, log_file, level=logging.INFO):
+    """로거 설정 함수"""
+    os.makedirs(os.path.dirname(log_file), exist_ok=True)
+    
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', 
+                                 datefmt='%Y-%m-%d %H:%M:%S')
+    
+    handler = logging.FileHandler(log_file, encoding='utf-8')
+    handler.setFormatter(formatter)
+    
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+    
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    logger.addHandler(handler)
+    logger.addHandler(console_handler)
+    
+    return logger
+
+# 기본 로거 설정
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+LOG_FILE = LOGS_DIR / f"sac_trading_{timestamp}.log"
+LOGGER = setup_logger("sac_trading", LOG_FILE)
+
+# 데이터베이스 로거 설정
+DB_LOG_FILE = LOGS_DIR / f"db_connection_{timestamp}.log"
+DB_LOGGER = setup_logger("db_connection", DB_LOG_FILE)
+
+# ========================================
+# 헬퍼 함수들
+# ========================================
+
+def get_db_connection_string():
+    """데이터베이스 연결 문자열 반환"""
+    return f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
+# 추가 헬퍼 함수들 (기존 코드에서 참조되는 것들)
+def get_active_symbol_config(symbol: str):
+    """활성화된 심볼의 설정 반환"""
+    return ACTIVE_TRADING_SYMBOLS.get(symbol, DEFAULT_SYMBOL_CONFIG)
+
+def get_total_max_exposure():
+    """전체 최대 노출도 반환"""
+    return GLOBAL_MAX_EXPOSURE
+
+# 데이터베이스 공통 쿼리 설정
+DB_QUERIES = {
+    "get_table_list": """
+        SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_schema = '{schema}' AND table_name LIKE '{prefix}%';
+    """,
+    "get_date_range": """
+        SELECT 
+            MIN(timestamp) as start_date,
+            MAX(timestamp) as end_date,
+            COUNT(*) as rows
+        FROM {table_name};
+    """,
+    "get_daily_data": """
+        SELECT *
+        FROM {table_name}
+        WHERE timestamp BETWEEN '{start_date}' AND '{end_date}'
+        ORDER BY timestamp ASC;
+    """
+}
+
+# ========================================
+# Config 클래스 (모든 설정을 포함)
+# ========================================
+
+class Config:
+    # 디렉토리 설정
+    ROOT_DIR = ROOT_DIR
+    DATA_DIR = DATA_DIR
+    LOGS_DIR = LOGS_DIR
+    MODELS_DIR = MODELS_DIR
+    RESULTS_DIR = RESULTS_DIR
+    
+    # 심볼 설정
+    TARGET_SYMBOLS = TARGET_SYMBOLS  # 테스트용: ['AAPL']만
+    ALL_SYMBOLS = ALL_SYMBOLS        # 전체 심볼 리스트
+    TRADING_SYMBOLS = TRADING_SYMBOLS
+    trading_symbols = TRADING_SYMBOLS
+    ACTIVE_TRADING_SYMBOLS = ACTIVE_TRADING_SYMBOLS
+    DEFAULT_SYMBOL_CONFIG = DEFAULT_SYMBOL_CONFIG
+    
+    # 안전 설정
+    SAFE_TRADING_CONFIG = SAFE_TRADING_CONFIG
+    DATA_COLLECTION_CONFIG = DATA_COLLECTION_CONFIG
+    NOTIFICATION_CONFIG = NOTIFICATION_CONFIG
+    
+    # 리스크 관리 설정 (매우 보수적)
+    GLOBAL_MAX_EXPOSURE = GLOBAL_MAX_EXPOSURE
+    MAX_DRAWDOWN = MAX_DRAWDOWN
+    MAX_DAILY_LOSS = MAX_DAILY_LOSS
+    EMERGENCY_STOP_LOSS = EMERGENCY_STOP_LOSS
+    
+    # 개별 속성들 (테스트 스크립트에서 사용)
+    max_position_size = DEFAULT_SYMBOL_CONFIG['max_position_size']  # 0.01
+    max_trade_amount = DEFAULT_SYMBOL_CONFIG['max_trade_amount']     # 100.0
+    trading_interval = DEFAULT_SYMBOL_CONFIG['trading_interval']    # 600
+    
+    # 데이터베이스 설정
+    DB_USER = DB_USER
+    DB_PASSWORD = DB_PASSWORD
+    DB_HOST = DB_HOST
+    DB_PORT = DB_PORT
+    DB_NAME = DB_NAME
+    DB_SCHEMA = DB_SCHEMA
+    DB_TABLE_PREFIX = DB_TABLE_PREFIX
+    DB_POOL_SIZE = DB_POOL_SIZE
+    DB_TIMEOUT = DB_TIMEOUT
+    DB_MAX_OVERFLOW = DB_MAX_OVERFLOW
+    DB_RETRY_COUNT = DB_RETRY_COUNT
+    DB_RETRY_DELAY = DB_RETRY_DELAY
+    DB_QUERIES = DB_QUERIES
+    
+    # 데이터 설정
+    DATA_START_DATE = DATA_START_DATE
+    WINDOW_SIZE = WINDOW_SIZE
+    window_size = WINDOW_SIZE
+    TRAIN_RATIO = TRAIN_RATIO
+    VALID_RATIO = VALID_RATIO
+    TEST_RATIO = TEST_RATIO
+    
+    # 트레이딩 환경 설정
+    INITIAL_BALANCE = INITIAL_BALANCE
+    MAX_TRADING_UNITS = MAX_TRADING_UNITS
+    TRANSACTION_FEE_PERCENT = TRANSACTION_FEE_PERCENT
+    
+    # 모델 설정
+    HIDDEN_DIM = HIDDEN_DIM
+    LEARNING_RATE_ACTOR = LEARNING_RATE_ACTOR
+    LEARNING_RATE_CRITIC = LEARNING_RATE_CRITIC
+    LEARNING_RATE_ALPHA = LEARNING_RATE_ALPHA
+    GAMMA = GAMMA
+    TAU = TAU
+    ALPHA_INIT = ALPHA_INIT
+    TARGET_UPDATE_INTERVAL = TARGET_UPDATE_INTERVAL
+    REPLAY_BUFFER_SIZE = REPLAY_BUFFER_SIZE
+    BATCH_SIZE = BATCH_SIZE
+    NUM_EPISODES = NUM_EPISODES
+    EVALUATE_INTERVAL = EVALUATE_INTERVAL
+    SAVE_MODEL_INTERVAL = SAVE_MODEL_INTERVAL
+    MAX_STEPS_PER_EPISODE = MAX_STEPS_PER_EPISODE
+    DEVICE = DEVICE
+    
+    # 로거 설정
+    LOGGER = LOGGER
+    DB_LOGGER = DB_LOGGER
+    
+    # 백테스트 설정
+    BACKTEST_START_DATE = BACKTEST_START_DATE
+    BACKTEST_END_DATE = BACKTEST_END_DATE
+    
+    # 알파카 API 설정
+    API_KEY = API_KEY
+    API_SECRET = API_SECRET
+    BASE_URL = BASE_URL
+    DATA_FEED = DATA_FEED
+    MAX_RETRIES = MAX_RETRIES
+    DEBUG = DEBUG
+    
+    # 헬퍼 메서드들
+    @staticmethod
+    def get_db_connection_string():
+        return get_db_connection_string()
+    
+    @staticmethod
+    def get_active_symbol_config(symbol: str):
+        return get_active_symbol_config(symbol)
+    
+    @staticmethod
+    def get_total_max_exposure():
+        return get_total_max_exposure()
+
+    @staticmethod
+    def setup_logger(name, log_file, level=logging.INFO):
+        return setup_logger(name, log_file, level)
+
+# 글로벌 config 인스턴스
+config = Config()
+
+# ========================================
+# 🚨 안전 확인 메시지
+# ========================================
+
+print("=" * 60)
+print("🧪 SAC 트레이딩 시스템 - 테스트 모드")
+print("=" * 60)
+print(f"📊 활성화된 심볼: {TRADING_SYMBOLS}")
+print(f"💰 최대 포지션 크기: {DEFAULT_SYMBOL_CONFIG['max_position_size']*100}%")
+print(f"💵 최대 거래 금액: ${DEFAULT_SYMBOL_CONFIG['max_trade_amount']}")
+print(f"⏰ 거래 간격: {DEFAULT_SYMBOL_CONFIG['trading_interval']/60}분")
+print(f"🛡️ 일일 최대 손실: {MAX_DAILY_LOSS*100}%")
+print(f"🔒 페이퍼 트레이딩: {BASE_URL}")
+print("=" * 60)

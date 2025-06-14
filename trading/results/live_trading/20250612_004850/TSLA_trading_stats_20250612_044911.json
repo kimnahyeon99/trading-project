@@ -1,0 +1,168 @@
+{
+    "trading_stats": {
+        "start_time": "2025-06-12 00:49:03.743202",
+        "trades": [
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 0.3392505296663324,
+                "price": 330.28,
+                "timestamp": "2025-06-12 00:56:56",
+                "order_id": "87f01b08-3fb3-4f89-8502-84ae3e84f41d",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 0.38467770457843814,
+                "price": 329.16,
+                "timestamp": "2025-06-12 01:07:50",
+                "order_id": "f3d34132-0e78-469e-8089-9c82e9a8eba6",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 0.5050752369009716,
+                "price": 326.84,
+                "timestamp": "2025-06-12 01:11:06",
+                "order_id": "17387d5f-b6b2-49c6-aefe-8298ba783d4e",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "sell",
+                "quantity": 0.31647286819643256,
+                "price": 329.45,
+                "timestamp": "2025-06-12 01:44:54",
+                "order_id": "6a993e96-cf35-4d04-9234-49db7553df50",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "sell",
+                "quantity": 0.30457970290073166,
+                "price": 330.1,
+                "timestamp": "2025-06-12 02:03:26",
+                "order_id": "9a7e128b-b9cf-457f-bb16-2dc3f60c0704",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 0.3297688471034924,
+                "price": 328.25,
+                "timestamp": "2025-06-12 02:49:12",
+                "order_id": "64ab1eab-7441-4e8f-94f2-195eca081011",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 0.61602393496171,
+                "price": 325.71,
+                "timestamp": "2025-06-12 03:00:05",
+                "order_id": "4a7f81c6-c9f2-4eaa-9b9d-c8e6d2674dca",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 0.5040368310172576,
+                "price": 324.27,
+                "timestamp": "2025-06-12 03:02:16",
+                "order_id": "e91e6159-5f34-4782-9b1a-a5bec14facff",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 0.37505452268602496,
+                "price": 323.17,
+                "timestamp": "2025-06-12 03:17:31",
+                "order_id": "54f11178-5d72-48f7-affb-48b8994d8078",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "sell",
+                "quantity": 0.4155988425459418,
+                "price": 324.5,
+                "timestamp": "2025-06-12 03:21:52",
+                "order_id": "adde502f-b082-46ba-a3a6-b58ef3b44ce6",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "sell",
+                "quantity": 0.3854897057291564,
+                "price": 326.3,
+                "timestamp": "2025-06-12 03:41:29",
+                "order_id": "3f33b638-575c-4eb7-9985-dee929dd350b",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "TSLA",
+                "side": "buy",
+                "quantity": 0.31653392517994033,
+                "price": 324.24,
+                "timestamp": "2025-06-12 04:17:26",
+                "order_id": "1d911b64-3df5-4c09-9ed8-454ac53d2551",
+                "status": "success",
+                "model_type": "CNN"
+            }
+        ],
+        "successful_trades": 12,
+        "failed_trades": 0,
+        "initial_balance": 38089.1,
+        "current_balance": 37454.37,
+        "pnl": -634.7299999999959,
+        "daily_start_balance": 38089.1,
+        "session_start_positions": {
+            "TSLA": {
+                "symbol": "TSLA",
+                "qty": 187.225948101,
+                "avg_entry_price": 330.674805,
+                "current_price": 331.1601,
+                "market_value": 62001.763696,
+                "unrealized_pl": 90.859886,
+                "unrealized_plpc": 0.001467591012382,
+                "change_today": 0.0155481615504922
+            }
+        }
+    },
+    "account_info": {
+        "id": "15b65065-eab2-495f-aca4-6241a64cb670",
+        "cash": 37454.37,
+        "portfolio_value": 98978.56,
+        "equity": 98978.56,
+        "buying_power": 136432.93,
+        "status": "ACTIVE",
+        "day_trade_count": 0,
+        "pattern_day_trader": false
+    },
+    "positions": {
+        "TSLA": {
+            "symbol": "TSLA",
+            "qty": 189.174228512,
+            "avg_entry_price": 330.597025,
+            "current_price": 325.2003,
+            "market_value": 61519.515864,
+            "unrealized_pl": -1020.921304,
+            "unrealized_plpc": -0.0163241792067673,
+            "change_today": -0.0027283878683799
+        }
+    },
+    "timestamp": "2025-06-12 04:49:11"
+}

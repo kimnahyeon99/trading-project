@@ -1,0 +1,65 @@
+{
+    "trading_stats": {
+        "start_time": "2025-05-28 04:01:42.264693",
+        "trades": [
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 59.9364,
+                "price": 200.4,
+                "timestamp": "2025-05-28 04:02:03",
+                "order_id": "a0710008-f58f-4090-bef3-77ddb98bd146",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 2.4954,
+                "price": 200.37,
+                "timestamp": "2025-05-28 04:03:13",
+                "order_id": "31cd50ef-cba4-4dae-8417-57bad29e0843",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 1.5487,
+                "price": 200.4,
+                "timestamp": "2025-05-28 04:04:24",
+                "order_id": "bad72344-1a7a-4e5c-901f-a1339fbc8d94",
+                "status": "success",
+                "model_type": "CNN"
+            }
+        ],
+        "successful_trades": 3,
+        "failed_trades": 0,
+        "initial_balance": 88140.74,
+        "current_balance": 99341.13,
+        "pnl": 11200.39
+    },
+    "account_info": {
+        "id": "ad7cb72d-3347-49f6-8db1-540ace75230e",
+        "cash": 99341.13,
+        "portfolio_value": 100151.59,
+        "equity": 100151.59,
+        "buying_power": 199492.72,
+        "status": "ACTIVE",
+        "day_trade_count": 0,
+        "pattern_day_trader": false
+    },
+    "positions": {
+        "AAPL": {
+            "symbol": "AAPL",
+            "qty": 4.0441,
+            "avg_entry_price": 200.405318,
+            "current_price": 200.405,
+            "market_value": 810.457861,
+            "unrealized_pl": -0.001286,
+            "unrealized_plpc": -1.5867548719e-06,
+            "change_today": 0.026296922210273
+        }
+    },
+    "timestamp": "2025-05-28 04:05:00"
+}

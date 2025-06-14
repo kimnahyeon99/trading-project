@@ -1,0 +1,29 @@
+{
+    "portfolio_value": 777,
+    "cash_balance": 777,
+    "equity_value": 777,
+    "daily_pnl": 777,
+    "total_pnl": 777,
+    "positions": {
+      "AAPL": {
+        "quantity": 777,
+        "avg_entry_price": 777,
+        "current_price": 777,
+        "unrealized_pnl": 777,
+        "timestamp": "2025-05-26T14:00:00"
+      }
+    },
+    "trades": [
+      {
+        "timestamp": "2025-05-26T13:59:00",
+        "symbol": "AAPL",
+        "side": "buy",
+        "quantity": 7,
+        "price": 777.0,
+        "fee": 777.0,
+        "pnl": null,
+        "model_id": "model_v1"
+      }
+    ]
+  }
+  

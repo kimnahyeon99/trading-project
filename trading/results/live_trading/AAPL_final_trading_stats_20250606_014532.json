@@ -1,0 +1,118 @@
+{
+    "trading_stats": {
+        "start_time": "2025-06-06 01:37:45.256159",
+        "trades": [
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 39.0903444855,
+                "price": 203.03,
+                "timestamp": "2025-06-06 01:37:56",
+                "order_id": "b46e833c-dd1b-4c66-80cc-3e8086952d65",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 19.545172243,
+                "price": 203.05,
+                "timestamp": "2025-06-06 01:39:01",
+                "order_id": "52878bfa-0764-4310-ab26-c7e1143446a4",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 9.627503210065804,
+                "price": 202.88,
+                "timestamp": "2025-06-06 01:40:06",
+                "order_id": "ccb6bc38-c323-4008-908d-323596ccf7d6",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 4.9293,
+                "price": 202.87,
+                "timestamp": "2025-06-06 01:41:12",
+                "order_id": "eec1197e-2795-45cd-bfa8-bf75787a3ba6",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 4.9273,
+                "price": 202.95,
+                "timestamp": "2025-06-06 01:42:17",
+                "order_id": "db3759c0-ebc8-4e77-861c-4ea1d5dc77ec",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 4.929,
+                "price": 202.88,
+                "timestamp": "2025-06-06 01:43:22",
+                "order_id": "f1a37adc-beb0-4af1-b224-32483b7df0c6",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 4.9293,
+                "price": 202.87,
+                "timestamp": "2025-06-06 01:44:27",
+                "order_id": "e1b1dec3-4e39-479a-9233-1274462f0c3e",
+                "status": "success",
+                "model_type": "LSTM"
+            }
+        ],
+        "successful_trades": 7,
+        "failed_trades": 0,
+        "initial_balance": 84162.23,
+        "current_balance": 94017.13,
+        "pnl": 9854.900000000009,
+        "daily_start_balance": 84162.23,
+        "session_start_positions": {
+            "AAPL": {
+                "symbol": "AAPL",
+                "qty": 78.180688971,
+                "avg_entry_price": 203.379517,
+                "current_price": 203.02,
+                "market_value": 15872.243475,
+                "unrealized_pl": -28.107293,
+                "unrealized_plpc": -0.001767715279374,
+                "change_today": 0.0009860960457549
+            }
+        }
+    },
+    "account_info": {
+        "id": "ad7cb72d-3347-49f6-8db1-540ace75230e",
+        "cash": 94017.13,
+        "portfolio_value": 100020.1,
+        "equity": 100020.1,
+        "buying_power": 375961.24,
+        "status": "ACTIVE",
+        "day_trade_count": 0,
+        "pattern_day_trader": true
+    },
+    "positions": {
+        "AAPL": {
+            "symbol": "AAPL",
+            "qty": 29.632569033,
+            "avg_entry_price": 203.045518,
+            "current_price": 202.55,
+            "market_value": 6002.076858,
+            "unrealized_pl": -14.683476,
+            "unrealized_plpc": -0.0024404289326642,
+            "change_today": -0.0013312296617691
+        }
+    },
+    "timestamp": "2025-06-06 01:45:32"
+}

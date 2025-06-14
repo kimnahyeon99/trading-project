@@ -1,0 +1,16 @@
+# Python 캐시 파일
+__pycache__/
+*.py[cod]
+
+# 로그 파일
+*.log
+
+# 기타 임시 파일
+*.tmp
+*.swp
+.DS_Store
+
+requirements.txt
+
+*.png
+*.csv

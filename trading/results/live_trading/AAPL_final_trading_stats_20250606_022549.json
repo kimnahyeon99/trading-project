@@ -1,0 +1,378 @@
+{
+    "trading_stats": {
+        "start_time": "2025-06-06 01:50:08.747548",
+        "trades": [
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 3.0775092643376745,
+                "price": 202.27,
+                "timestamp": "2025-06-06 01:50:20",
+                "order_id": "29592681-dc5c-4efc-b16a-3311fa048c85",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 5.1231265855,
+                "price": 202.23,
+                "timestamp": "2025-06-06 01:51:25",
+                "order_id": "cbdf56cc-878f-4188-9d9f-0d1a39bc4113",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 4.9483,
+                "price": 202.09,
+                "timestamp": "2025-06-06 01:52:30",
+                "order_id": "ea8dda4e-aec0-4c9c-97e4-0eee9a32a814",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 4.9547,
+                "price": 201.83,
+                "timestamp": "2025-06-06 01:53:35",
+                "order_id": "dec97ec2-c649-4c26-ac6f-27d6199d2572",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 4.9506,
+                "price": 201.995,
+                "timestamp": "2025-06-06 01:54:54",
+                "order_id": "cce9161e-b498-4cf7-bf19-35ba38427a44",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 4.9515,
+                "price": 201.96,
+                "timestamp": "2025-06-06 01:55:46",
+                "order_id": "7ef7daf7-16b9-463d-8458-252ae388b708",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 4.9495,
+                "price": 202.04,
+                "timestamp": "2025-06-06 01:56:51",
+                "order_id": "4b6e3137-4556-4b24-ad1c-86cc6b421772",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 4.948,
+                "price": 202.1,
+                "timestamp": "2025-06-06 01:57:56",
+                "order_id": "48fcedb7-9754-42c3-9284-345137011aee",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 17.412863293,
+                "price": 202.075,
+                "timestamp": "2025-06-06 01:59:02",
+                "order_id": "123d78b5-7d27-400e-bd82-59c6e3fedd4b",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 8.7064316465,
+                "price": 201.85,
+                "timestamp": "2025-06-06 02:00:07",
+                "order_id": "76b1bfbe-42bf-4eee-b501-33b1748c7164",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 4.3532158235,
+                "price": 201.64,
+                "timestamp": "2025-06-06 02:01:12",
+                "order_id": "75b1a5e3-1bc6-4f55-bb5a-e7430345617e",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 2.176607912,
+                "price": 201.69,
+                "timestamp": "2025-06-06 02:02:18",
+                "order_id": "332f8ab7-6cf7-47b7-8753-4fc8f1149645",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 1.088303956,
+                "price": 201.83,
+                "timestamp": "2025-06-06 02:03:23",
+                "order_id": "b0a7c7e9-b292-4c7a-9a26-892a8ca1f974",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 0.544151978,
+                "price": 201.67,
+                "timestamp": "2025-06-06 02:04:28",
+                "order_id": "a32da63c-ba69-40bc-af9c-98a5762d4d9c",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 0.272075989,
+                "price": 201.65,
+                "timestamp": "2025-06-06 02:05:33",
+                "order_id": "d05a5005-6b58-4293-bdb6-a8c16cfec0de",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 4.9576,
+                "price": 201.71,
+                "timestamp": "2025-06-06 02:06:39",
+                "order_id": "f596104b-df47-42cb-ba28-11bc6187f85e",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 4.9601,
+                "price": 201.61,
+                "timestamp": "2025-06-06 02:07:44",
+                "order_id": "5da21783-e691-4b6b-9fab-f2c8349d4985",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 1.6579248121316994,
+                "price": 201.92,
+                "timestamp": "2025-06-06 02:08:49",
+                "order_id": "bd2e5888-e8e5-4676-9c52-a90ed36f63f9",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 4.2659255885,
+                "price": 202.0,
+                "timestamp": "2025-06-06 02:09:55",
+                "order_id": "3616cd92-c86e-4ebe-b73b-0d951718a9cf",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 2.1329627945,
+                "price": 201.89,
+                "timestamp": "2025-06-06 02:11:00",
+                "order_id": "b4ff47be-6b70-4f3e-84be-4d7d5def51a7",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 1.0664813975,
+                "price": 202.01,
+                "timestamp": "2025-06-06 02:12:05",
+                "order_id": "15f7ce74-013b-4e55-9ef6-0834c223e721",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 4.3714,
+                "price": 202.06,
+                "timestamp": "2025-06-06 02:13:10",
+                "order_id": "e9b7f6dc-f77e-44a2-b99d-f6c8e8c8a5bc",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 4.9491,
+                "price": 202.055,
+                "timestamp": "2025-06-06 02:14:16",
+                "order_id": "6dd6ee1f-9cab-4ceb-a083-a894b0cf44fe",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 5.193490699,
+                "price": 202.18,
+                "timestamp": "2025-06-06 02:15:21",
+                "order_id": "45334b62-1102-4980-833a-b288d68e69da",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 4.9439,
+                "price": 202.27,
+                "timestamp": "2025-06-06 02:16:26",
+                "order_id": "4ac6e332-5389-4931-9830-a24ba944420c",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 4.9427,
+                "price": 202.32,
+                "timestamp": "2025-06-06 02:17:32",
+                "order_id": "dd7a397f-e75a-4183-84bc-68f5ec92443e",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 7.5400453495,
+                "price": 202.38,
+                "timestamp": "2025-06-06 02:18:37",
+                "order_id": "6b659a8a-3f38-4687-8996-1563b0d9deaa",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 3.770022675,
+                "price": 202.33,
+                "timestamp": "2025-06-06 02:19:43",
+                "order_id": "18d62c80-10c2-4c80-8124-dfd28696ee05",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 1.8850113375,
+                "price": 202.25,
+                "timestamp": "2025-06-06 02:20:48",
+                "order_id": "fb525818-2258-4db9-b91c-109fc91b76b9",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 0.942505669,
+                "price": 202.32,
+                "timestamp": "2025-06-06 02:21:53",
+                "order_id": "23cccd9f-3073-4a5f-af83-c63f06b4bfb2",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 4.9405,
+                "price": 202.41,
+                "timestamp": "2025-06-06 02:22:58",
+                "order_id": "589d6bb4-3683-4d8e-8256-fe58421e3e93",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 2.9415028345,
+                "price": 202.39,
+                "timestamp": "2025-06-06 02:24:04",
+                "order_id": "3c3ea1ca-e3e4-46db-9a1c-f565ed8501d3",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 1.4707514175,
+                "price": 202.56,
+                "timestamp": "2025-06-06 02:25:09",
+                "order_id": "5a86197b-1374-4d7d-be45-dc3be013618e",
+                "status": "success",
+                "model_type": "LSTM"
+            }
+        ],
+        "successful_trades": 33,
+        "failed_trades": 0,
+        "initial_balance": 97318.55,
+        "current_balance": 99712.23,
+        "pnl": 2393.679999999993,
+        "daily_start_balance": 97318.55,
+        "session_start_positions": {
+            "AAPL": {
+                "symbol": "AAPL",
+                "qty": 13.323762435,
+                "avg_entry_price": 203.045518,
+                "current_price": 202.21,
+                "market_value": 2694.198002,
+                "unrealized_pl": -11.132246,
+                "unrealized_plpc": -0.004114930518457,
+                "change_today": -0.0030075929395523
+            }
+        }
+    },
+    "account_info": {
+        "id": "ad7cb72d-3347-49f6-8db1-540ace75230e",
+        "cash": 99712.23,
+        "portfolio_value": 100010.11,
+        "equity": 100010.11,
+        "buying_power": 381676.14,
+        "status": "ACTIVE",
+        "day_trade_count": 0,
+        "pattern_day_trader": true
+    },
+    "positions": {
+        "AAPL": {
+            "symbol": "AAPL",
+            "qty": 1.470751418,
+            "avg_entry_price": 202.355197,
+            "current_price": 202.525,
+            "market_value": 297.863931,
+            "unrealized_pl": 0.249738,
+            "unrealized_plpc": 0.0008391333675407,
+            "change_today": -0.0014544916674884
+        }
+    },
+    "timestamp": "2025-06-06 02:25:49"
+}

@@ -1,0 +1,24 @@
+{
+  "symbol": "TSLA",
+  "metrics": {
+    "total_return": 23.68587872247459,
+    "cumulative_return": 23.685878722474584,
+    "annual_return": 0.26280863915189023,
+    "volatility": 2.000138429841427,
+    "sharpe_ratio": 0.13139522506586004,
+    "max_drawdown": -13.686444775621547,
+    "total_trades": 20410,
+    "buy_trades": 9301,
+    "sell_trades": 11109,
+    "winning_trades": 8456,
+    "win_rate": 76.1184625078765,
+    "total_steps": 20410
+  },
+  "summary": {
+    "initial_balance": 99995.81223106934,
+    "final_balance": 123680.69904367384,
+    "total_return_pct": 23.68587872247459,
+    "total_trades": 20410,
+    "win_rate_pct": 76.1184625078765
+  }
+}

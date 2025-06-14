@@ -1,0 +1,68 @@
+{
+    "trading_stats": {
+        "start_time": "2025-06-07 02:58:17.229837",
+        "trades": [
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 2.1313467343002555,
+                "price": 204.08,
+                "timestamp": "2025-06-07 02:58:47",
+                "order_id": "9522caf4-f5fc-4383-9a7b-600e14d0f48d",
+                "status": "success",
+                "model_type": "LSTM"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "sell",
+                "quantity": 1.3910198490615504,
+                "price": 204.09,
+                "timestamp": "2025-06-07 02:59:38",
+                "order_id": "9e5fcab4-7bad-48cb-baa7-d535cdf6f02d",
+                "status": "success",
+                "model_type": "LSTM"
+            }
+        ],
+        "successful_trades": 2,
+        "failed_trades": 0,
+        "initial_balance": 97993.12,
+        "current_balance": 98711.91,
+        "pnl": 718.7900000000081,
+        "daily_start_balance": 97993.12,
+        "session_start_positions": {
+            "AAPL": {
+                "symbol": "AAPL",
+                "qty": 9.80825,
+                "avg_entry_price": 203.930962,
+                "current_price": 204.12,
+                "market_value": 2002.05999,
+                "unrealized_pl": 1.854129,
+                "unrealized_plpc": 0.0009269690866084,
+                "change_today": 0.0173952051039226
+            }
+        }
+    },
+    "account_info": {
+        "id": "ad7cb72d-3347-49f6-8db1-540ace75230e",
+        "cash": 98711.91,
+        "portfolio_value": 99994.61,
+        "equity": 99994.61,
+        "buying_power": 398737.65,
+        "status": "ACTIVE",
+        "day_trade_count": 0,
+        "pattern_day_trader": true
+    },
+    "positions": {
+        "AAPL": {
+            "symbol": "AAPL",
+            "qty": 6.285883417,
+            "avg_entry_price": 203.930962,
+            "current_price": 204.05,
+            "market_value": 1282.634511,
+            "unrealized_pl": 0.748257,
+            "unrealized_plpc": 0.000583715596969,
+            "change_today": 0.0170463041419528
+        }
+    },
+    "timestamp": "2025-06-07 02:59:51"
+}

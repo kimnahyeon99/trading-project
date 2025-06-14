@@ -1,0 +1,24 @@
+{
+  "symbol": "AAPL",
+  "metrics": {
+    "total_return": 0.48500194384995843,
+    "cumulative_return": 0.48500194384994977,
+    "annual_return": 2.1244071327488845,
+    "volatility": 0.48237823996240625,
+    "sharpe_ratio": 4.4040277043061655,
+    "max_drawdown": -0.08305192693148784,
+    "total_trades": 44,
+    "buy_trades": 34,
+    "sell_trades": 10,
+    "winning_trades": 7,
+    "win_rate": 70.0,
+    "total_steps": 58
+  },
+  "summary": {
+    "initial_balance": 100000.0,
+    "final_balance": 100485.00194384996,
+    "total_return_pct": 0.48500194384995843,
+    "total_trades": 44,
+    "win_rate_pct": 70.0
+  }
+}

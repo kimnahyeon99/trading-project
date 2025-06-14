@@ -1,0 +1,333 @@
+/* SAC 트레이딩 시스템 - 다크 테마 + 화이트 카드 UI (통일감 & 세련됨 버전) */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #111827;
+    color: #e5e7eb;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.footer {
+    margin-top: auto;
+}
+
+/* 네비게이션 바 */
+.navbar {
+    background-color: #0b1a35 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+.navbar .navbar-brand,
+.navbar .nav-link,
+.navbar-toggler {
+    color: white !important;
+}
+.navbar .nav-link.active {
+    color: #60a5fa !important;
+    border-bottom: 2px solid #60a5fa;
+}
+
+/* 탭 버튼 */
+.nav-tabs .nav-link {
+    color: white;
+    background: none;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 999px;
+    transition: all 0.3s ease;
+}
+.nav-tabs .nav-link.active {
+    background: linear-gradient(to right, #3b82f6, #9333ea);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.value-text {
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+  .card .card-header {
+    background-color: #f8f9fa; /* 밝은 회색 */
+    border-bottom: 1px solid #dee2e6;
+  }
+
+/* 카드 공통 스타일 */
+.card, .section-card, .stat-card, .model-box, .upload-box {
+    background-color: #f9fafb;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    color: #111111;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover,
+.section-card:hover,
+.stat-card:hover,
+.model-box:hover,
+.upload-box:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+}
+
+/* 카드 제목 */
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* 입력창 */
+input.form-control,
+select.form-control,
+textarea.form-control {
+    background-color: #f8fafc;
+    border: 1px solid #cbd5e1;
+    color: #111827;
+    border-radius: 0.5rem;
+    padding: 0.6rem 1rem;
+    font-size: 0.95rem;
+    transition: box-shadow 0.2s ease;
+}
+input.form-control:focus,
+textarea.form-control:focus,
+select.form-control:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.3);
+}
+
+/* 테이블 */
+.table {
+    font-size: 0.9rem;
+    background-color: #ffffff;
+    border-collapse: collapse;
+    margin-bottom: 0;
+}
+.table th, .table td {
+    color: #111827;
+    background-color: #f9fafb;
+    border-color: #e2e8f0;
+}
+.table th {
+    background-color: #f1f5f9;
+    font-weight: 600;
+}
+
+/* 버튼 */
+.refresh-btn,
+.btn-outline-primary {
+    font-size: 0.875rem;
+    border-color: #60a5fa;
+    color: #60a5fa;
+    border-radius: 0.5rem;
+}
+.btn-outline-primary:hover {
+    background-color: #60a5fa;
+    color: white;
+}
+
+/* 모델 선택 카드 화살표 */
+.custom-select-wrapper {
+    position: relative;
+  }
+  
+.custom-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 2.5rem;
+    background-color: #f8fafc;
+    border: 1px solid #cbd5e1;
+    color: #111827;
+    border-radius: 0.5rem;
+    background-image: none;
+  }
+  
+.custom-select-arrow {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    pointer-events: none;
+  }
+  
+.news-count {
+    font-size: 3.0rem!important;
+    font-weight: 400;
+    color: #2563eb !important;
+  }
+  
+#delete-model-message {
+    color: #111111;       
+    /* font-weight: 600;       */
+    font-size: 1rem;       
+  }
+
+.delete-word {
+    color: #ef4444;   
+    font-weight: 700; 
+    font-style: bold;     
+    text-decoration: double underline;
+    text-underline-offset: 2px;
+  }
+  
+  
+.emoji {
+    font-family: "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
+  }
+
+
+#delete-model-name {
+    color: #000000; 
+    font-weight: 600; 
+  }
+
+/* 모델 선택 카드 화살표 */
+.select-wrapper {
+    position: relative;
+  }
+  
+  .select-wrapper select {
+    padding-right: 30px;
+  }
+  
+  .select-arrow {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: #808080;
+    pointer-events: none;
+  }
+
+ /* 최근 거래 내역 테이블 영역 스크롤 고정 */
+ .recent-trades-scroll {
+    max-height: 300px;      /* 원하는 높이로 조절 가능 */
+    overflow-y: auto;
+    border-top: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* 스크롤바 스타일 (선택) */
+.recent-trades-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+.recent-trades-scroll::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 3px;
+}
+
+/* 로딩 애니메이션 */
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+}
+.loading::after {
+    content: "";
+    width: 30px;
+    height: 30px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 상태 텍스트 */
+.text-success { color: #22c55e !important; }
+.text-danger { color: #ef4444 !important; }
+.text-warning { color: #facc15 !important; }
+
+/* 링크 */
+a {
+    color: #60a5fa;
+    text-decoration: none;
+}
+a:hover {
+    color: #93c5fd;
+}
+
+/* 데이터 없음 메시지 */
+.no-data {
+    text-align: center;
+    padding: 2rem;
+    color: #94a3b8;
+}
+
+/* 모델 카드 active */
+.model-card.active {
+    background-color: #f8fafc;
+    border-left: 4px solid #60a5fa;
+}
+
+/* 백테스트 성능요약 라벨 */
+.value-label {
+    font-size: 1.7rem;  
+    font-weight: 400;   /* 약간 굵게 */
+    color: #111111;    
+    margin-bottom: 4px;
+  }
+
+.value-text {
+    color: #111111;
+    transition: color 0.3s ease;
+    font-size: 1.3rem;
+    font-weight: 500;
+    margin: 0;
+  }
+  
+
+.highlight-value {
+    color: #f51f1f !important;
+    transition: color 0.3s ease;
+  }
+  
+/* 모달 제목 색상 변경 */
+.modal-title {
+    color: #0d6efd; /* Bootstrap Primary 색 (파란색) */
+    font-weight: bold;
+}
+
+/* 모달 안의 구분 제목 (예: "기본 정보") */
+.modal-body h5 {
+    background-color: #f1f3f5;  /* 밝은 회색 배경 */
+    color: #333;                /* 어두운 회색 글자 */
+    padding: 8px 12px;
+    border-left: 4px solid #0d6efd;  /* 파란색 강조선 */
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+
+.delete-confirm-text {
+    color: #212529;
+    font-weight: 500;
+}
+  
+
+
+/* 반응형 */
+@media (max-width: 768px) {
+    .stat-card {
+        margin-bottom: 1rem;
+    }
+    .chart-container {
+        height: 250px;
+    }
+}

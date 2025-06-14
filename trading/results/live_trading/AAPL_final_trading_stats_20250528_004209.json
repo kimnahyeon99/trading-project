@@ -1,0 +1,145 @@
+{
+    "trading_stats": {
+        "start_time": "2025-05-28 00:29:40.525968",
+        "trades": [
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 2.508,
+                "price": 199.36,
+                "timestamp": "2025-05-28 00:30:01",
+                "order_id": "1b497349-1158-49df-a373-1be5b03a0b52",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 2.5095,
+                "price": 199.24,
+                "timestamp": "2025-05-28 00:31:12",
+                "order_id": "63b7db4a-620f-45a4-b7cb-f5e959f07220",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 2.5108,
+                "price": 199.14,
+                "timestamp": "2025-05-28 00:32:22",
+                "order_id": "ca4cf220-d6fc-4f1a-94ea-8fc2c4da7605",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 2.5105,
+                "price": 199.16,
+                "timestamp": "2025-05-28 00:33:32",
+                "order_id": "ce03a0ca-8833-46bd-92b4-20c6088d8232",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 2.51,
+                "price": 199.2,
+                "timestamp": "2025-05-28 00:34:43",
+                "order_id": "427fb51a-9387-434a-9da8-068a31801f3c",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 2.5094,
+                "price": 199.25,
+                "timestamp": "2025-05-28 00:35:53",
+                "order_id": "db3e7672-cdd0-44a3-9cf4-57e778e9b2e5",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 2.5094,
+                "price": 199.25,
+                "timestamp": "2025-05-28 00:37:04",
+                "order_id": "f442eb17-6b83-4e91-ac25-26fb99d69cb3",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 2.5094,
+                "price": 199.25,
+                "timestamp": "2025-05-28 00:38:14",
+                "order_id": "8bd4259d-fca3-4704-97d2-57975afcbeba",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 2.5104,
+                "price": 199.17,
+                "timestamp": "2025-05-28 00:39:25",
+                "order_id": "f5dd1ca1-67e3-4989-aab8-d89c1960f4bf",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 2.5098,
+                "price": 199.22,
+                "timestamp": "2025-05-28 00:40:35",
+                "order_id": "f886bb24-657f-4022-b587-c7a850840a2a",
+                "status": "success",
+                "model_type": "CNN"
+            },
+            {
+                "symbol": "AAPL",
+                "side": "buy",
+                "quantity": 2.5098,
+                "price": 199.22,
+                "timestamp": "2025-05-28 00:41:46",
+                "order_id": "e0237232-03b5-4a4e-af22-9f1eeb02d29d",
+                "status": "success",
+                "model_type": "CNN"
+            }
+        ],
+        "successful_trades": 11,
+        "failed_trades": 0,
+        "initial_balance": 94536.89,
+        "current_balance": 89037.36,
+        "pnl": -5499.529999999999
+    },
+    "account_info": {
+        "id": "ad7cb72d-3347-49f6-8db1-540ace75230e",
+        "cash": 89037.36,
+        "portfolio_value": 100066.44,
+        "equity": 100066.44,
+        "buying_power": 189103.8,
+        "status": "ACTIVE",
+        "day_trade_count": 0,
+        "pattern_day_trader": false
+    },
+    "positions": {
+        "AAPL": {
+            "symbol": "AAPL",
+            "qty": 55.3454,
+            "avg_entry_price": 198.751326,
+            "current_price": 199.2772,
+            "market_value": 11029.076345,
+            "unrealized_pl": 29.104683,
+            "unrealized_plpc": 0.0026458870890135,
+            "change_today": 0.0205213294412864
+        }
+    },
+    "timestamp": "2025-05-28 00:42:09"
+}

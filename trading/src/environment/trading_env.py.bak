@@ -1,0 +1,1159 @@
+"""
+강화학습을 위한 트레이딩 환경 모듈 (정리된 버전)
+"""
+import sys
+import os
+
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+sys.path.append(project_root)
+
+import numpy as np
+import pandas as pd
+from typing import Dict, List, Tuple, Union, Optional, Any
+import gym
+from gym import spaces
+from src.data_collection.data_collector import DataCollector
+from decimal import Decimal, ROUND_DOWN, getcontext
+
+# 저장 경로 폴더 생성
+save_dir = './results'
+os.makedirs(save_dir, exist_ok=True)
+
+from src.config.ea_teb_config import (
+    INITIAL_BALANCE,
+    MAX_TRADING_UNITS,
+    TRANSACTION_FEE_PERCENT,
+    WINDOW_SIZE,
+    LOGGER,
+	MAX_DRAWDOWN, 
+	MAX_DAILY_LOSS, 
+	EMERGENCY_STOP_LOSS
+)
+
+class TradingEnvironment:
+    """
+    강화학습을 위한 트레이딩 환경 클래스 (정리된 버전)
+    """
+    
+    def __init__(
+        self,
+        data: pd.DataFrame,
+        raw_data: pd.DataFrame = None,
+        window_size: int = WINDOW_SIZE,
+        initial_balance: float = INITIAL_BALANCE,
+        max_trading_units: int = MAX_TRADING_UNITS,
+        transaction_fee_percent: float = TRANSACTION_FEE_PERCENT,
+        symbol: str = None,
+        train_data: bool = True,
+        reward_mode: str = 'combined',
+        detailed_logging: bool = True,
+    ):
+        """
+        TradingEnvironment 클래스 초기화
+        """
+        # 📊 기본 데이터 설정
+        self.data = data
+        if raw_data is not None:
+            self.raw_data = raw_data
+        else:
+            LOGGER.warning("⚠️ raw_data가 제공되지 않았습니다. 정규화된 데이터를 사용합니다.")
+            self.raw_data = data
+        
+        print(f'📈 정규화된 데이터 형태: {data.shape}')
+        print(f'📊 원본 데이터 형태: {self.raw_data.shape}')
+        
+        # ⏰ 타임스탬프 초기화
+        if hasattr(self.raw_data.index, 'values'):
+            self.timestamps = self.raw_data.index.values
+        else:
+            self.timestamps = np.array([None] * len(self.raw_data))
+
+        # 🎯 환경 설정 파라미터
+        self.window_size = window_size
+        self.initial_balance = initial_balance
+        self.max_trading_units = max_trading_units
+        self.transaction_fee_percent = transaction_fee_percent
+        self.symbol = symbol if symbol else "UNKNOWN"
+        self.train_data = train_data
+        self.reward_mode = reward_mode
+        self.detailed_logging = detailed_logging
+        
+        # 📏 데이터 관련 변수
+        self.feature_dim = data.shape[1]
+        self.data_length = len(data)
+        
+        # 💰 환경 상태 변수 초기화
+        self._init_state_variables()
+        
+        # 🎮 행동 공간: [-1.0, 1.0] 범위의 연속적인 값
+        self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(1,), dtype=np.float32)
+        
+        # 👀 관측 공간: 가격 데이터 + 포트폴리오 상태
+        self.observation_space = spaces.Dict({
+            'market_data': spaces.Box(
+                low=-np.inf, high=np.inf, shape=(self.window_size, self.feature_dim), dtype=np.float32
+            ),
+            'portfolio_state': spaces.Box(
+                low=0, high=np.inf, shape=(2,), dtype=np.float32
+            )
+        })
+        
+        # 🔍 원본 데이터 검증
+        if 'close' not in self.raw_data.columns:
+            LOGGER.warning("⚠️ raw_data에 'close' 컬럼이 없습니다. 마지막 컬럼을 종가로 사용합니다.")
+        
+        # ✅ 유효성 검사
+        valid_modes = ['combined', 'trade_only', 'market_only', 'separated']
+        if reward_mode not in valid_modes:
+            raise ValueError(f"reward_mode는 {valid_modes} 중 하나여야 합니다")
+        
+        LOGGER.info(f"✅ {self.symbol} 트레이딩 환경 초기화 완료: 데이터 길이 {self.data_length}")
+        LOGGER.info(f"🎯 보상 모드: {reward_mode}, 📝 상세 로깅: {detailed_logging}")
+
+    def _init_state_variables(self):
+        """💰 환경 상태 변수 초기화"""
+        self.current_step = 0
+        self.balance = self.initial_balance
+        self.shares_held = 0
+        self.cost_basis = 0
+        self.total_shares_purchased = 0
+        self.total_shares_sold = 0
+        self.total_sales_value = 0
+        self.total_commission = 0
+        self.position = "홀드"
+        self.trade_executed = False 
+        self.previous_shares_held = 0
+        self.invalid_sell_penalty = False
+        
+        # 📈 에피소드 히스토리
+        self.states_history = []
+        self.actions_history = []
+        self.rewards_history = []
+        self.portfolio_values_history = []
+        self.trade_effects_history = []
+        self.market_effects_history = []
+        self.combined_effects_history = []
+    
+    def reset(self) -> Dict[str, np.ndarray]:
+        """
+        🔄 환경 초기화
+        """
+        print(f"\n🔄 환경 리셋 시작 - {self.symbol}")
+        self._init_state_variables()
+        print(f"💰 초기 잔고: ${self.initial_balance:.2f}")
+        return self._get_observation()
+
+    def _get_current_price(self) -> float:
+        """
+        💵 현재 주가 반환 (디버깅 최적화)
+        """
+        # 🔍 인덱스 유효성 검사
+        if self.current_step >= len(self.raw_data):
+            last_valid_index = len(self.raw_data) - 1
+            LOGGER.warning(f"⚠️ 인덱스 범위 초과: {self.current_step} >= {len(self.raw_data)}, 마지막 유효한 가격 사용")
+            
+            if 'close' in self.raw_data.columns:
+                price = float(self.raw_data.iloc[last_valid_index]['close'])
+            else:
+                price = float(self.raw_data.iloc[last_valid_index][-1])
+        else:
+            # 📊 정상적인 경우
+            if 'close' in self.raw_data.columns:
+                price = float(self.raw_data.iloc[self.current_step]['close'])
+            else:
+                price = float(self.raw_data.iloc[self.current_step][-1])
+                
+            # 🔍 디버깅: 스텝당 한 번만 출력 (첫 번째 호출에서만)
+            debug_key = f"price_debug_{self.current_step}"
+            if self.current_step >= 70 and not hasattr(self, debug_key):
+                setattr(self, debug_key, True)  # 이 스텝에서 이미 디버깅했다고 표시
+                
+                current_timestamp = self.raw_data.index[self.current_step]
+                print(f"🔍 가격 디버깅 (Step {self.current_step}):")
+                print(f"  ⏰ 타임스탬프: {current_timestamp}")
+                print(f"  💵 가격: ${price:.2f}")
+                
+                # 이전 스텝과 비교
+                if self.current_step > 0 and self.current_step - 1 < len(self.raw_data):
+                    prev_timestamp = self.raw_data.index[self.current_step - 1]
+                    if 'close' in self.raw_data.columns:
+                        prev_price = float(self.raw_data.iloc[self.current_step - 1]['close'])
+                    else:
+                        prev_price = float(self.raw_data.iloc[self.current_step - 1][-1])
+                    
+                    price_change = price - prev_price
+                    print(f"  📊 이전 스텝: {self.current_step - 1} (${prev_price:.2f})")
+                    print(f"  📈 가격 변화: ${price_change:.2f}")
+                    
+                    if abs(price_change) < 0.01:
+                        print(f"  ⚠️ 가격이 거의 동일!")
+                    elif price_change > 0:
+                        print(f"  📈 가격 상승!")
+                    else:
+                        print(f"  📉 가격 하락!")
+                print()
+        
+        # 🚨 가격이 0 이하인 경우 처리
+        if price <= 0:
+            LOGGER.warning(f"⚠️ 현재 가격이 0 이하입니다: {price}, 최소값으로 조정")
+            price = 0.01
+            
+        return price
+
+    def _execute_trade_action(self, action: float) -> None:
+        """
+        🔄 거래 행동 실행 (디버깅 강화)
+        """
+        current_price = self._get_current_price()
+        
+        # 🚨 현재 가격 유효성 확인
+        if current_price <= 0:
+            LOGGER.warning(f"⚠️ 현재 가격이 0 이하입니다: {current_price}")
+            return
+        
+        # 🎯 행동 값 처리
+        action_value = action[0] if isinstance(action, np.ndarray) else action
+        
+        # 📊 거래 전 상태 저장 (상세 디버깅용)
+        old_balance = self.balance
+        old_shares = self.shares_held
+        old_portfolio_value = old_balance + old_shares * current_price
+        
+        print(f"\n💼 거래 실행 시작 - Step {self.current_step}")
+        print(f"📊 행동 값: {action_value:.4f}")
+        print(f"💵 현재 가격: ${current_price:.2f}")
+        print(f"💰 거래 전 잔고: ${self.balance:.2f}")
+        print(f"📈 거래 전 보유량: {self.shares_held:.4f}")
+        print(f"💎 거래 전 포트폴리오: ${old_portfolio_value:.2f}")
+        
+        # 🎮 기본 상태 설정
+        self.trade_executed = False
+        self.position = "홀드"
+        self.invalid_sell_penalty = False
+        
+        # 💪 최소 행동 임계값 처리
+        min_action_threshold = 0.1
+        if 0 < abs(action_value) < min_action_threshold:
+            action_value = min_action_threshold * (1 if action_value > 0 else -1)
+            print(f"🔧 행동 값 증폭: {action_value:.4f}")
+        
+        getcontext().prec = 10
+        
+        if action_value > 0:  # 💰 매수
+            self._execute_buy(action_value, current_price)
+            
+        elif action_value < 0:  # 💸 매도
+            self._execute_sell(action_value, current_price)
+        
+        else:  # 🤚 홀드
+            print(f"🤚 홀드 (행동 값이 0)")
+        
+        # 📊 거래 후 상태 출력 (상세 분석)
+        new_portfolio_value = self.balance + self.shares_held * current_price
+        balance_change = self.balance - old_balance
+        shares_change = self.shares_held - old_shares
+        portfolio_change = new_portfolio_value - old_portfolio_value
+        
+        print(f"\n📊 거래 결과 분석:")
+        print(f"💰 잔고 변화: ${old_balance:.2f} → ${self.balance:.2f} (변화: ${balance_change:.2f})")
+        print(f"📈 보유량 변화: {old_shares:.4f} → {self.shares_held:.4f} (변화: {shares_change:.4f})")
+        print(f"💎 포트폴리오 변화: ${old_portfolio_value:.2f} → ${new_portfolio_value:.2f} (변화: ${portfolio_change:.2f})")
+        
+        # 🔍 거래 유형별 예상 변화 계산
+        if self.trade_executed:
+            if action_value > 0:  # 매수
+                expected_cost = shares_change * current_price * (1 + self.transaction_fee_percent)
+                print(f"💰 매수 - 예상 비용: ${expected_cost:.2f}, 실제 잔고 감소: ${-balance_change:.2f}")
+                print(f"📈 매수 - 예상 수수료: ${expected_cost - (shares_change * current_price):.2f}")
+            else:  # 매도
+                expected_income = abs(shares_change) * current_price * (1 - self.transaction_fee_percent)
+                print(f"💸 매도 - 예상 수익: ${expected_income:.2f}, 실제 잔고 증가: ${balance_change:.2f}")
+                print(f"📈 매도 - 예상 수수료: ${(abs(shares_change) * current_price) - expected_income:.2f}")
+        
+        # 🚨 포트폴리오 변화가 예상과 다른 경우 경고
+        if self.trade_executed and abs(portfolio_change) > 1.0:  # 1달러 이상 차이
+            print(f"🚨 예상치 못한 포트폴리오 변화: ${portfolio_change:.2f}")
+            print(f"   수수료만으로는 ${abs(portfolio_change):.2f} 차이를 설명할 수 없습니다!")
+        elif self.trade_executed:
+            print(f"✅ 포트폴리오 변화가 수수료 범위 내: ${portfolio_change:.2f}")
+        
+        print(f"{'='*60}")
+
+    def _execute_buy(self, action_value: float, current_price: float) -> None:
+        """💰 매수 실행"""
+        # 🧮 매수할 수 있는 최대 주식 수 계산
+        max_affordable = self.balance / (current_price * (1 + self.transaction_fee_percent))
+        shares_to_buy = min(max_affordable, self.max_trading_units * action_value)
+        
+        print(f"💰 매수 시도:")
+        print(f"  📊 구매 가능 최대량: {max_affordable:.4f}")
+        print(f"  🎯 원하는 매수량: {self.max_trading_units * action_value:.4f}")
+        print(f"  ✅ 실제 매수량: {shares_to_buy:.4f}")
+        
+        if shares_to_buy > 0:
+            # 🔧 소수점 처리
+            shares_to_buy = float(Decimal(str(shares_to_buy)).quantize(Decimal('0.0001'), rounding=ROUND_DOWN))
+            
+            # 💰 비용 계산
+            buy_cost = shares_to_buy * current_price
+            commission = buy_cost * self.transaction_fee_percent
+            total_cost = buy_cost + commission
+            
+            print(f"  💵 매수 비용: ${buy_cost:.2f}")
+            print(f"  💸 수수료: ${commission:.2f}")
+            print(f"  💎 총 비용: ${total_cost:.2f}")
+            
+            if self.balance >= total_cost:
+                # ✅ 매수 실행
+                self.balance -= total_cost
+                self.shares_held += shares_to_buy
+                self.total_shares_purchased += shares_to_buy
+                self.total_commission += commission
+                
+                # 📊 거래 상태 업데이트
+                self.trade_executed = True
+                self.position = "매수"
+                
+                # 📈 평균 매수 단가 업데이트
+                if self.shares_held > 0:
+                    self.cost_basis = ((self.cost_basis * (self.shares_held - shares_to_buy)) + buy_cost) / self.shares_held
+                
+                print(f"  ✅ 매수 성공: {shares_to_buy}주 @ ${current_price:.2f}")
+            else:
+                print(f"  ❌ 잔고 부족: 필요 ${total_cost:.2f}, 보유 ${self.balance:.2f}")
+
+    def _execute_sell(self, action_value: float, current_price: float) -> None:
+        """💸 매도 실행 (상세 계산 검증)"""
+        shares_to_sell = min(self.shares_held, self.max_trading_units * abs(action_value))
+        
+        print(f"💸 매도 시도:")
+        print(f"  📊 현재 보유량: {self.shares_held:.4f}")
+        print(f"  🎯 원하는 매도량: {self.max_trading_units * abs(action_value):.4f}")
+        print(f"  ✅ 실제 매도량: {shares_to_sell:.4f}")
+        print(f"  💵 매도 가격: ${current_price:.2f}")
+        
+        if shares_to_sell > 0:
+            # 🔧 소수점 처리
+            shares_to_sell = float(Decimal(str(shares_to_sell)).quantize(Decimal('0.0001'), rounding=ROUND_DOWN))
+            
+            if shares_to_sell <= 0:
+                print(f"  ❌ 소수점 처리 후 매도량이 0이 되었습니다!")
+                return
+            
+            # 💰 수익 계산 - 상세 단계별 계산
+            gross_sell_value = shares_to_sell * current_price  # 총 매도 금액
+            commission = gross_sell_value * self.transaction_fee_percent  # 수수료
+            net_value = gross_sell_value - commission  # 순 수익
+            
+            print(f"  📊 상세 매도 계산:")
+            print(f"    💵 총 매도 금액: {shares_to_sell:.4f} × ${current_price:.2f} = ${gross_sell_value:.2f}")
+            print(f"    💸 수수료율: {self.transaction_fee_percent:.4f}")
+            print(f"    💸 수수료 금액: ${gross_sell_value:.2f} × {self.transaction_fee_percent:.4f} = ${commission:.2f}")
+            print(f"    💎 순 수익: ${gross_sell_value:.2f} - ${commission:.2f} = ${net_value:.2f}")
+            
+            # 📊 거래 전 상태 저장
+            old_balance = self.balance
+            old_shares = self.shares_held
+            
+            # ✅ 매도 실행
+            self.balance += net_value
+            self.shares_held -= shares_to_sell
+            self.total_shares_sold += shares_to_sell
+            self.total_sales_value += gross_sell_value
+            self.total_commission += commission
+            
+            # 📊 거래 상태 업데이트
+            self.trade_executed = True
+            self.position = "매도"
+            
+            # 🔍 검증 계산
+            balance_change = self.balance - old_balance
+            shares_change = old_shares - self.shares_held
+            
+            print(f"  ✅ 매도 실행 결과:")
+            print(f"    💰 잔고 변화: ${old_balance:.2f} → ${self.balance:.2f} (증가: ${balance_change:.2f})")
+            print(f"    📈 보유량 변화: {old_shares:.4f} → {self.shares_held:.4f} (감소: {shares_change:.4f})")
+            print(f"    ✅ 예상 순수익: ${net_value:.2f}")
+            print(f"    ✅ 실제 잔고 증가: ${balance_change:.2f}")
+            
+            # 🚨 계산 검증
+            if abs(net_value - balance_change) > 0.01:
+                print(f"    🚨 계산 불일치! 예상: ${net_value:.2f}, 실제: ${balance_change:.2f}")
+            else:
+                print(f"    ✅ 계산 일치 확인")
+                
+            if abs(shares_to_sell - shares_change) > 0.0001:
+                print(f"    🚨 주식 수량 불일치! 예상: {shares_to_sell:.4f}, 실제: {shares_change:.4f}")
+            else:
+                print(f"    ✅ 주식 수량 일치 확인")
+        else:
+            print(f"  ❌ 매도할 수량이 없습니다")
+
+    def _get_portfolio_value(self) -> float:
+        """
+        💎 현재 포트폴리오 가치 계산
+        """
+        current_price = self._get_current_price()
+        stock_value = self.shares_held * current_price
+        total_value = self.balance + stock_value
+        
+        # 🔍 디버깅용 상세 출력
+        if self.detailed_logging and self.current_step % 50 == 0:  # 50스텝마다 출력
+            print(f"💎 포트폴리오 가치 계산 (Step {self.current_step}):")
+            print(f"  💰 현금: ${self.balance:.2f}")
+            print(f"  📈 보유량: {self.shares_held:.4f}")
+            print(f"  💵 현재가: ${current_price:.2f}")
+            print(f"  📊 주식가치: ${stock_value:.2f}")
+            print(f"  💎 총 가치: ${total_value:.2f}")
+        
+        # 🚨 포트폴리오 가치가 너무 작으면 최소 가치 보장
+        if total_value <= 0:
+            return max(self.balance, 1.0)
+            
+        return total_value
+
+    def _get_observation(self) -> Dict[str, np.ndarray]:
+        """
+        👀 현재 관측값 반환
+        """
+        # 📊 윈도우 크기만큼의 정규화된 가격 데이터 가져오기
+        start_idx = max(0, self.current_step - self.window_size + 1)
+        end_idx = self.current_step + 1
+        
+        # 🔧 데이터가 충분하지 않은 경우 패딩 처리
+        if start_idx == 0 and end_idx - start_idx < self.window_size:
+            market_data = np.zeros((self.window_size, self.feature_dim), dtype=np.float32)
+            actual_data = self.data.iloc[start_idx:end_idx].values
+            market_data[-len(actual_data):] = actual_data
+        else:
+            market_data = self.data.iloc[start_idx:end_idx].values
+            if len(market_data) < self.window_size:
+                padding = np.zeros((self.window_size - len(market_data), self.feature_dim), dtype=np.float32)
+                market_data = np.vstack([padding, market_data])
+        
+        # 💎 포트폴리오 상태 계산
+        portfolio_value = self._get_portfolio_value()
+        stock_value = self.shares_held * self._get_current_price()
+        
+        portfolio_state = np.array([
+            self.balance / portfolio_value,  # 현금 비율
+            stock_value / portfolio_value    # 주식 비율
+        ], dtype=np.float32)
+        
+        # 📊 관측값 딕셔너리 생성
+        observation = {
+            'market_data': market_data.astype(np.float32),
+            'portfolio_state': portfolio_state
+        }
+        
+        self.states_history.append(observation)
+        return observation
+
+    def _calculate_reward(self, prev_portfolio_value: float, portfolio_after_trade: float, 
+                         current_portfolio_value: float) -> Union[float, Dict[str, float]]:
+        """
+        🎁 보상 계산 (통합된 메소드)
+        """
+        # 🔍 안전한 이전 포트폴리오 값 설정
+        if prev_portfolio_value <= 0:
+            prev_portfolio_value = max(self.balance, 1.0)
+        
+        # 📊 각 효과 계산
+        if prev_portfolio_value > 0:
+            trade_effect = (portfolio_after_trade - prev_portfolio_value) / prev_portfolio_value
+        else:
+            trade_effect = 0
+            
+        if portfolio_after_trade > 0:
+            market_effect = (current_portfolio_value - portfolio_after_trade) / portfolio_after_trade
+        else:
+            market_effect = 0
+            
+        if prev_portfolio_value > 0:
+            total_effect = (current_portfolio_value - prev_portfolio_value) / prev_portfolio_value
+        else:
+            total_effect = 0
+        
+        # 보상 모드에 따른 계산 클리핑
+        if self.reward_mode == 'trade_only':
+            reward = np.clip(trade_effect * 100, -2, 2)
+        elif self.reward_mode == 'market_only':
+            reward = np.clip(market_effect * 50, -5, 5)
+        elif self.reward_mode == 'separated':
+            trade_reward = np.clip(trade_effect * 100, -2, 2)
+            market_reward = np.clip(market_effect * 50, -5, 5)
+            reward = {
+                'trade': trade_reward,
+                'market': market_reward,
+                'total': trade_reward + market_reward
+            }
+        else:  # 'combined'
+            reward = np.clip(total_effect * 50, -5, 5)
+        
+        # 🚨 잘못된 매도 페널티
+        if self.invalid_sell_penalty:
+            penalty = -1.0
+            if isinstance(reward, dict):
+                reward['trade'] += penalty
+                reward['total'] += penalty
+            else:
+                reward += penalty
+            print(f"❌ 잘못된 매도 페널티: {penalty}")
+        
+        # 📊 상세 로깅
+        if self.detailed_logging:
+            print(f"🎁 보상 계산 결과:")
+            print(f"  📊 거래 효과: {trade_effect:.6f}")
+            print(f"  📈 시장 효과: {market_effect:.6f}")
+            print(f"  💎 총 효과: {total_effect:.6f}")
+            if isinstance(reward, dict):
+                print(f"  🎯 거래 보상: {reward['trade']:.6f}")
+                print(f"  🎯 시장 보상: {reward['market']:.6f}")
+                print(f"  🎯 총 보상: {reward['total']:.6f}")
+            else:
+                print(f"  🎯 보상 ({self.reward_mode}): {reward:.6f}")
+        
+        return reward
+
+    def step(self, action: float) -> Tuple[Dict[str, np.ndarray], Union[float, Dict[str, float]], bool, Dict[str, Any]]:
+        """
+        🚀 환경에서 한 스텝 진행 (정리된 버전)
+        """
+        print(f"\n🚀 Step {self.current_step} 시작")
+        print("="*60)
+        
+        # 🔄 초기화
+        self.invalid_sell_penalty = False
+        self.actions_history.append(action)
+        
+        # 📊 1. 거래 전 상태 저장
+        current_price_before = self._get_current_price()
+        prev_portfolio_value = self._get_portfolio_value()
+        
+        # ⏰ 거래 전 시간 정보
+        if self.current_step < len(self.raw_data):
+            before_timestamp = self.raw_data.index[self.current_step]
+        else:
+            before_timestamp = "범위 초과"
+        
+        print(f"📅 거래 전 시간: {before_timestamp}")
+        print(f"💵 거래 전 가격: ${current_price_before:.2f}")
+        print(f"💎 거래 전 포트폴리오: ${prev_portfolio_value:.2f}")
+        print(f"🎯 에이전트 행동: {action:.4f}")
+        
+        # 🔄 2. 거래 실행
+        self._execute_trade_action(action)
+        
+        # 💰 3. 거래 후 포트폴리오 가치 계산 (정확한 방식)
+        # 거래 직후의 실제 잔고와 보유량을 거래 시점 가격으로 계산
+        portfolio_after_trade = self.balance + self.shares_held * current_price_before
+        
+        print(f"💼 거래 후 포트폴리오 계산:")
+        print(f"  💰 새로운 잔고: ${self.balance:.2f}")
+        print(f"  📈 새로운 보유량: {self.shares_held:.4f}")
+        print(f"  💵 거래 시점 가격: ${current_price_before:.2f}")
+        print(f"  📊 주식 가치 (거래가격): ${self.shares_held * current_price_before:.2f}")
+        print(f"  💎 계산된 포트폴리오: ${portfolio_after_trade:.2f}")
+        
+        # 🔍 검증: 수동으로 다시 계산해보기
+        manual_stock_value = self.shares_held * current_price_before
+        manual_portfolio = self.balance + manual_stock_value
+        print(f"  ✅ 검증 계산: ${self.balance:.2f} + ${manual_stock_value:.2f} = ${manual_portfolio:.2f}")
+        
+        if abs(portfolio_after_trade - manual_portfolio) > 0.01:
+            print(f"  🚨 계산 불일치 발견!")
+        else:
+            print(f"  ✅ 계산 일치 확인")
+        
+        # ⏰ 4. 다음 스텝으로 이동
+        self.current_step += 1
+        
+        # 🚨 5. 조기 종료 조건 확인
+        if self.current_step >= len(self.raw_data):
+            LOGGER.warning(f"⚠️ 데이터 범위 초과로 에피소드 조기 종료: step {self.current_step} >= data length {len(self.raw_data)}")
+            done = True
+            current_portfolio_value = self.balance + self.shares_held * current_price_before
+            current_price_after = current_price_before
+            after_timestamp = before_timestamp
+        else:
+            # 📈 6. 시장 변동 후 포트폴리오 가치
+            current_price_after = self._get_current_price()
+            current_portfolio_value = self._get_portfolio_value()
+            after_timestamp = self.raw_data.index[self.current_step]
+            
+            # ✅ 7. 기존 종료 조건 확인
+            done = self.current_step >= self.data_length - 1
+        
+        print(f"📅 거래 후 시간: {after_timestamp}")
+        print(f"💵 거래 후 가격: ${current_price_after:.2f}")
+        print(f"💎 최종 포트폴리오: ${current_portfolio_value:.2f}")
+        print(f"📊 주식 가치 (새 가격): ${self.shares_held * current_price_after:.2f}")
+        print(f"📈 포트폴리오 변화: 거래전 ${prev_portfolio_value:.2f} → 거래후 ${portfolio_after_trade:.2f} → 최종 ${current_portfolio_value:.2f}")
+        
+        # 🔍 가격 변화 효과 분석
+        price_change = current_price_after - current_price_before
+        portfolio_change_from_price = self.shares_held * price_change
+        print(f"💵 가격 변화: ${price_change:.2f} (${current_price_before:.2f} → ${current_price_after:.2f})")
+        print(f"📈 가격 변화로 인한 포트폴리오 영향: ${portfolio_change_from_price:.2f}")
+        print(f"📊 실제 포트폴리오 변화: ${current_portfolio_value - prev_portfolio_value:.2f}")
+        
+        # 🎁 8. 보상 계산
+        reward = self._calculate_reward(prev_portfolio_value, portfolio_after_trade, current_portfolio_value)
+        
+        # 📈 9. 히스토리 업데이트
+        self.portfolio_values_history.append(current_portfolio_value)
+        
+        if isinstance(reward, dict):
+            self.rewards_history.append(reward['total'])
+            self.trade_effects_history.append(reward['trade'])
+            self.market_effects_history.append(reward['market'])
+        else:
+            self.rewards_history.append(reward)
+            # 간단한 효과 계산해서 저장
+            trade_effect = (portfolio_after_trade - prev_portfolio_value) / prev_portfolio_value if prev_portfolio_value > 0 else 0
+            market_effect = (current_portfolio_value - portfolio_after_trade) / portfolio_after_trade if portfolio_after_trade > 0 else 0
+            self.trade_effects_history.append(trade_effect)
+            self.market_effects_history.append(market_effect)
+        
+        # 🔍 10. 디버깅 정보 (특정 스텝에서)
+        if self.current_step >= 340:
+            print(f"\n🔍 Step {self.current_step} 상세 디버깅:")
+            print(f"  📊 current_step: {self.current_step}")
+            print(f"  📊 raw_data 길이: {len(self.raw_data)}")
+            print(f"  📊 data_length: {self.data_length}")
+            print(f"  💵 가격 변화: ${current_price_before:.2f} → ${current_price_after:.2f}")
+            print(f"  💎 포트폴리오 변화: ${prev_portfolio_value:.2f} → ${current_portfolio_value:.2f}")
+            print(f"  🏁 종료 여부: {done}")
+        
+        # 👀 11. 관측값 및 추가 정보
+        observation = self._get_observation()
+        info = self._get_info()
+        
+        # 📊 시간 정보를 info에 추가
+        info.update({
+            'reward_mode': self.reward_mode,
+            'current_timestamp': after_timestamp,
+            'previous_timestamp': before_timestamp,
+            'price_before': current_price_before,
+            'price_after': current_price_after,
+            'portfolio_before': prev_portfolio_value,
+            'portfolio_after_trade': portfolio_after_trade,
+            'portfolio_after_market': current_portfolio_value
+        })
+        
+        # 낙폭 계산 및 리스크 체크
+        drawdown_exceeded, daily_loss_exceeded = self._check_risk_limits(current_portfolio_value)
+
+        if drawdown_exceeded or daily_loss_exceeded:
+            done = True
+            if drawdown_exceeded:
+                LOGGER.warning(f"⚠️ 최대 낙폭 초과로 에피소드 종료: {self.max_drawdown_pct:.2f}% > {self.max_drawdown_limit*100:.1f}%")
+            if daily_loss_exceeded:
+                LOGGER.warning(f"⚠️ 일일 손실 한도 초과로 에피소드 종료: {self.max_daily_loss_pct:.2f}% > {self.max_daily_loss_limit*100:.1f}%")
+
+        # info에 리스크 정보 추가
+        info.update({
+            'max_drawdown_pct': self.max_drawdown_pct,
+            'daily_loss_pct': self.max_daily_loss_pct,
+            'peak_portfolio_value': self.peak_portfolio_value,
+            'risk_limit_exceeded': drawdown_exceeded or daily_loss_exceeded
+        })
+        print("="*60)
+        return observation, reward, done, info
+
+    def _get_info(self) -> Dict[str, Any]:
+        """
+        📊 추가 정보 반환
+        """
+        current_price = self._get_current_price()
+        portfolio_value = self._get_portfolio_value()
+        
+        total_return = ((portfolio_value - self.initial_balance) / self.initial_balance) if self.initial_balance > 0 else 0
+        
+        # 📊 포지션 결정
+        if self.trade_executed:
+            position = self.position
+        else:
+            if self.shares_held < self.previous_shares_held:
+                position = "매도"
+            elif self.shares_held > self.previous_shares_held:
+                position = "매수"
+            else:
+                position = "홀드"
+        
+        self.previous_shares_held = self.shares_held
+        
+        # ⏰ 현재 타임스탬프 정보 가져오기
+        current_timestamp = None
+        if self.current_step < len(self.timestamps):
+            current_timestamp = self.timestamps[self.current_step]
+        
+        timestamps_info = None
+        if self.current_step < len(self.raw_data):
+            timestamps_info = self.raw_data.index[self.current_step]
+        
+        return {
+            'step': self.current_step,
+            'timestamp': current_timestamp,
+            'timestamps': timestamps_info,
+            'balance': self.balance,
+            'shares_held': self.shares_held,
+            'position': position, 
+            "previous_shares_held": self.previous_shares_held,
+            'current_price': current_price,
+            'portfolio_value': portfolio_value,
+            'total_return': total_return,
+            'cost_basis': self.cost_basis,
+            'total_shares_purchased': self.total_shares_purchased,
+            'total_shares_sold': self.total_shares_sold,
+            'total_sales_value': self.total_sales_value,
+            'total_commission': self.total_commission,
+            'trade_executed': self.trade_executed,
+        }
+    
+    def render(self, mode: str = 'human') -> None:
+        """
+        🖥️ 환경 시각화
+        """
+        info = self._get_info()
+        
+        print(f"📊 Step: {info['step']}")
+        print(f"💰 잔고: ${info['balance']:.2f}")
+        print(f"📈 보유량: {info['shares_held']}")
+        print(f"💵 현재가: ${info['current_price']:.2f}")
+        print(f"💎 포트폴리오 가치: ${info['portfolio_value']:.2f}")
+        print(f"📊 총 수익률: {info['total_return'] * 100:.2f}%")
+        print(f"💸 총 수수료: ${info['total_commission']:.2f}")
+        print("-" * 50)
+    
+    def get_episode_data(self) -> Dict[str, List]:
+        """
+        📈 에피소드 데이터 반환
+        """
+        return {
+            'actions': self.actions_history,
+            'rewards': self.rewards_history,
+            'portfolio_values': self.portfolio_values_history
+        }
+    
+    def get_final_portfolio_value(self) -> float:
+        """
+        💎 최종 포트폴리오 가치 반환
+        """
+        return self._get_portfolio_value()
+    
+    def get_total_reward(self) -> float:
+        """
+        🎁 총 보상 반환
+        """
+        return sum(self.rewards_history)
+    
+    def get_reward_analysis(self) -> Dict[str, Any]:
+        """
+        📊 보상 분석 결과 반환
+        """
+        if not self.trade_effects_history:
+            return {}
+        
+        trade_effects = np.array(self.trade_effects_history)
+        market_effects = np.array(self.market_effects_history)
+        
+        return {
+            'trade_effects': {
+                'mean': np.mean(trade_effects),
+                'std': np.std(trade_effects),
+                'sum': np.sum(trade_effects),
+                'positive_ratio': np.mean(trade_effects > 0)
+            },
+            'market_effects': {
+                'mean': np.mean(market_effects),
+                'std': np.std(market_effects),
+                'sum': np.sum(market_effects),
+                'positive_ratio': np.mean(market_effects > 0)
+            },
+            'correlation': np.corrcoef(trade_effects, market_effects)[0, 1] if len(trade_effects) > 1 else 0
+        }
+    def _check_risk_limits(self, current_portfolio_value: float) -> Tuple[bool, bool]:
+        """
+        리스크 한도 체크 (낙폭, 일일 손실)
+        
+        Returns:
+            (낙폭_초과_여부, 일일손실_초과_여부)
+        """
+        # 최고 포트폴리오 가치 업데이트
+        if current_portfolio_value > self.peak_portfolio_value:
+            self.peak_portfolio_value = current_portfolio_value
+        
+        # 최대 낙폭 계산
+        current_drawdown = 0.0
+        if self.peak_portfolio_value > 0:
+            current_drawdown = (self.peak_portfolio_value - current_portfolio_value) / self.peak_portfolio_value
+            self.max_drawdown_pct = max(self.max_drawdown_pct, current_drawdown * 100)
+        
+        # 일일 손실 계산
+        daily_loss = 0.0
+        if self.daily_start_portfolio > 0:
+            daily_loss = (self.daily_start_portfolio - current_portfolio_value) / self.daily_start_portfolio
+            self.max_daily_loss_pct = max(self.max_daily_loss_pct, daily_loss * 100)
+        
+        # 리스크 한도 체크
+        drawdown_exceeded = current_drawdown > self.max_drawdown_limit
+        daily_loss_exceeded = daily_loss > self.max_daily_loss_limit
+        
+        return drawdown_exceeded, daily_loss_exceeded
+
+    def get_risk_metrics(self) -> Dict[str, float]:
+        """현재 리스크 지표 반환"""
+        return {
+            'max_drawdown_pct': self.max_drawdown_pct,
+            'max_daily_loss_pct': self.max_daily_loss_pct,
+            'peak_portfolio_value': self.peak_portfolio_value,
+            'daily_start_portfolio': self.daily_start_portfolio
+        }
+
+
+def create_environment_from_results(results: Dict[str, Dict[str, Any]], symbol: str, data_type: str = 'test', **kwargs) -> TradingEnvironment:
+    """
+    🏭 DataProcessor 결과로부터 환경 생성하는 헬퍼 함수
+    
+    Args:
+        results: DataProcessor.process_all_symbols()의 결과
+        symbol: 주식 심볼
+        data_type: 'train', 'valid', 'test' 중 하나
+        **kwargs: TradingEnvironment 추가 인자
+        
+    Returns:
+        TradingEnvironment 인스턴스
+    """
+    if symbol not in results:
+        raise ValueError(f"심볼 {symbol}을 결과에서 찾을 수 없습니다")
+    
+    result = results[symbol]
+    
+    # 📊 정규화된 데이터 (에이전트 관측용)
+    if data_type not in result:
+        raise ValueError(f"데이터 타입 {data_type}을 심볼 {symbol}에서 찾을 수 없습니다")
+    
+    normalized_data = result[data_type]
+    
+    # 📈 원본 데이터 (실제 거래용) - featured_data에서 해당 구간 추출
+    featured_data = result['featured_data']
+    
+    if data_type == 'train':
+        raw_data = featured_data.iloc[:len(normalized_data)]
+    elif data_type == 'valid':
+        train_len = len(result['train'])
+        raw_data = featured_data.iloc[train_len:train_len + len(normalized_data)]
+    else:  # test
+        train_len = len(result['train'])
+        valid_len = len(result['valid'])
+        raw_data = featured_data.iloc[train_len + valid_len:train_len + valid_len + len(normalized_data)]
+    
+    print(f"🏭 환경 생성: {symbol} - {data_type}")
+    print(f"📊 정규화 데이터: {normalized_data.shape}")
+    print(f"📈 원본 데이터: {raw_data.shape}")
+    
+    # ✅ 환경 생성
+    env = TradingEnvironment(
+        data=normalized_data,
+        raw_data=raw_data,
+        symbol=symbol,
+        train_data=(data_type == 'train'),
+        **kwargs
+    )
+    
+    return env    
+
+
+class MultiAssetTradingEnvironment:
+    """🏢 다중 자산 트레이딩 환경 클래스 (정리된 버전)"""
+    
+    def __init__(
+        self,
+        results: Dict[str, Dict[str, Any]],
+        symbols: List[str],
+        data_type: str = 'test',
+        window_size: int = WINDOW_SIZE,
+        initial_balance: float = INITIAL_BALANCE,
+        max_trading_units: int = MAX_TRADING_UNITS,
+        transaction_fee_percent: float = TRANSACTION_FEE_PERCENT,
+        reward_mode: str = 'combined',
+        detailed_logging: bool = True
+    ):
+        """
+        MultiAssetTradingEnvironment 클래스 초기화
+        """
+        self.symbols = symbols
+        self.n_assets = len(symbols)
+        self.data_type = data_type
+        self.initial_balance = initial_balance
+        
+        print(f"🏢 다중 자산 환경 초기화: {self.n_assets}개 자산")
+        
+        # 🏭 개별 환경 생성
+        self.envs = {}
+        for symbol in symbols:
+            print(f"📊 {symbol} 환경 생성 중...")
+            self.envs[symbol] = create_environment_from_results(
+                results=results,
+                symbol=symbol,
+                data_type=data_type,
+                window_size=window_size,
+                initial_balance=initial_balance / self.n_assets,  # 자산별 균등 배분
+                max_trading_units=max_trading_units,
+                transaction_fee_percent=transaction_fee_percent,
+                reward_mode=reward_mode,
+                detailed_logging=detailed_logging
+            )
+        
+        # 🎮 행동 공간: 각 자산에 대한 연속 행동
+        self.action_space = spaces.Box(
+            low=-1.0, high=1.0, shape=(self.n_assets,), dtype=np.float32
+        )
+        
+        # 👀 관측 공간
+        self.observation_space = spaces.Dict({
+            symbol: env.observation_space for symbol, env in self.envs.items()
+        })
+        
+        LOGGER.info(f"✅ 다중 자산 환경 초기화 완료: {self.n_assets}개 자산, {data_type} 데이터")
+
+    def reset(self) -> Dict[str, Dict[str, np.ndarray]]:
+        """
+        🔄 환경 초기화
+        """
+        print(f"🔄 다중 자산 환경 리셋")
+        observations = {}
+        for symbol, env in self.envs.items():
+            observations[symbol] = env.reset()
+        
+        return observations
+    
+    def step(self, actions: Dict[str, float]) -> Tuple[Dict[str, Dict[str, np.ndarray]], float, bool, Dict[str, Any]]:
+        """
+        🚀 환경에서 한 스텝 진행
+        
+        Args:
+            actions: 심볼을 키로 하고 행동을 값으로 하는 딕셔너리
+            
+        Returns:
+            (관측값, 보상, 종료 여부, 추가 정보) 튜플
+        """
+        observations = {}
+        rewards = {}
+        dones = {}
+        infos = {}
+        
+        print(f"\n🚀 다중 자산 Step 진행")
+        
+        # 📊 각 자산에 대한 행동 실행
+        for symbol, env in self.envs.items():
+            action = actions.get(symbol, 0.0)  # 행동이 없는 경우 홀드
+            print(f"📈 {symbol} 처리 중...")
+            obs, rew, done, info = env.step(action)
+            
+            observations[symbol] = obs
+            rewards[symbol] = rew
+            dones[symbol] = done
+            infos[symbol] = info
+        
+        # 🎁 전체 보상은 각 자산의 보상 평균
+        total_reward = sum(rewards.values()) / self.n_assets
+        
+        # 🏁 모든 자산의 에피소드가 종료되면 전체 에피소드 종료
+        done = all(dones.values())
+        
+        # 💎 전체 포트폴리오 가치 계산
+        total_portfolio_value = sum(info['portfolio_value'] for info in infos.values())
+        trade_executed_any = any(info.get('trade_executed', False) for info in infos.values())
+        
+        # 📊 추가 정보에 전체 포트폴리오 가치 포함
+        infos['total'] = {
+            'portfolio_value': total_portfolio_value,
+            'total_return': (total_portfolio_value - self.initial_balance) / self.initial_balance,
+            'trade_executed': trade_executed_any
+        }
+
+        return observations, total_reward, done, infos
+    
+    def render(self, mode: str = 'human') -> None:
+        """
+        🖥️ 환경 시각화
+        """
+        total_portfolio_value = 0
+        
+        print("=" * 50)
+        print("🏢 다중 자산 트레이딩 환경 상태")
+        print("=" * 50)
+        
+        for symbol, env in self.envs.items():
+            info = env._get_info()
+            total_portfolio_value += info['portfolio_value']
+            
+            print(f"📈 자산: {symbol}")
+            print(f"  💵 가격: ${info['current_price']:.2f}")
+            print(f"  📊 보유량: {info['shares_held']:.3f}")
+            print(f"  💎 포트폴리오 가치: ${info['portfolio_value']:.2f}")
+            print(f"  📊 수익률: {info['total_return'] * 100:.2f}%")
+            print("-" * 50)
+        
+        total_return = (total_portfolio_value - self.initial_balance) / self.initial_balance
+        print(f"💎 총 포트폴리오 가치: ${total_portfolio_value:.2f}")
+        print(f"📊 총 수익률: {total_return * 100:.2f}%")
+        print("=" * 50)
+    
+    def get_final_portfolio_value(self) -> float:
+        """
+        💎 최종 포트폴리오 가치 반환
+        """
+        return sum(env.get_final_portfolio_value() for env in self.envs.values())
+    
+    def get_total_reward(self) -> float:
+        """
+        🎁 총 보상 반환
+        """
+        return sum(env.get_total_reward() for env in self.envs.values()) / self.n_assets
+
+
+def create_flexible_environment(results, symbol, reward_mode='combined', detailed_logging=True, data_type='train'):
+    """
+    🔧 유연한 보상 시스템을 가진 환경 생성
+    
+    Args:
+        results: DataProcessor 결과
+        symbol: 주식 심볼
+        reward_mode: 'combined', 'trade_only', 'market_only', 'separated'
+        detailed_logging: 상세 로깅 여부
+        data_type: 'train', 'valid', 'test'
+    """
+    print(f"🔧 유연한 환경 생성: {symbol} - {reward_mode}")
+    env = create_environment_from_results(
+        results=results,
+        symbol=symbol,
+        data_type=data_type,
+        reward_mode=reward_mode,
+        detailed_logging=detailed_logging
+    )
+    return env
+
+
+if __name__ == "__main__":
+    # 🧪 모듈 테스트 코드
+    import matplotlib.pyplot as plt
+    from src.data_collection.data_collector import DataCollector
+    from src.preprocessing.data_processor import DataProcessor
+    from src.config.config import config
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="테스트할 심볼")
+    parser.add_argument("--symbols", nargs="+", help="테스트할 심볼 리스트", default=config.trading_symbols)
+    args = parser.parse_args()
+    
+    # 📊 심볼 리스트 할당
+    symbols = args.symbols
+    TARGET_SYMBOL = symbols[0] if symbols else config.trading_symbols
+    print(f'📈 테스트 심볼들: {symbols}')
+    print(f'🎯 주요 테스트 심볼: {TARGET_SYMBOL}')
+    
+    # 📊 데이터 수집 및 전처리
+    print("📊 데이터 수집 시작...")
+    collector = DataCollector(symbols=symbols)
+    data = collector.load_all_data()
+    
+    try:
+        if data:
+            print("🔄 데이터 전처리 시작...")
+            processor = DataProcessor()
+            results = processor.process_all_symbols(data)
+            
+            if TARGET_SYMBOL in results:
+                print("=" * 60)
+                print(f"🧪 정리된 TradingEnvironment 테스트 시작 - {TARGET_SYMBOL}")
+                print("=" * 60)
+                
+                # 🎯 다양한 보상 모드로 테스트
+                for reward_mode in ['combined', 'trade_only', 'market_only', 'separated']:
+                    print(f"\n🔄 보상 모드 테스트: {reward_mode}")
+                    print("-" * 40)
+                    
+                    # ✅ 새로운 방식으로 환경 생성
+                    env = create_flexible_environment(
+                        results=results,
+                        symbol=TARGET_SYMBOL,
+                        reward_mode=reward_mode,
+                        detailed_logging=False,  # 테스트에서는 간단히
+                        data_type='train'
+                    )
+                    
+                    print(f"✅ 환경 생성 완료: {env.symbol}")
+                    print(f"🎯 보상 모드: {env.reward_mode}")
+                    
+                    # 🧪 간단한 테스트
+                    obs = env.reset()
+                    
+                    # 🚀 5스텝 실행
+                    total_reward = 0
+                    for i in range(5):
+                        action = np.random.uniform(-1.0, 1.0)
+                        obs, reward, done, info = env.step(action)
+                        
+                        if isinstance(reward, dict):
+                            total_reward += reward['total']
+                            print(f"  Step {i+1}: 거래보상={reward['trade']:.6f}, 시장보상={reward['market']:.6f}, 총보상={reward['total']:.6f}")
+                        else:
+                            total_reward += reward
+                            print(f"  Step {i+1}: 보상={reward:.6f}")
+                        
+                        if done:
+                            break
+                    
+                    print(f"  🎁 총 보상: {total_reward:.6f}")
+                    
+                    # 📊 보상 분석
+                    analysis = env.get_reward_analysis()
+                    if analysis:
+                        print(f"  📊 거래 효과 평균: {analysis['trade_effects']['mean']:.6f}")
+                        print(f"  📈 시장 효과 평균: {analysis['market_effects']['mean']:.6f}")
+                
+                print("\n" + "=" * 60)
+                print("✅ 모든 테스트 완료!")
+                print("=" * 60)
+                
+            else:
+                print(f"❌ {TARGET_SYMBOL} 데이터를 찾을 수 없습니다.")
+                print(f"✅ 사용 가능한 심볼: {list(results.keys())}")
+        else:
+            print("❌ 데이터를 로드할 수 없습니다.")
+            
+    except Exception as e:
+        print(f"🚨 테스트 중 오류 발생: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+def check_time_continuity(env):
+    """
+    ⏰ 시간 데이터 연속성 확인 함수
+    """
+    print(f"\n⏰ 시간 데이터 연속성 확인 (340-360 스텝)")
+    print("="*80)
+    
+    for i in range(340, min(360, len(env.raw_data))):
+        timestamp = env.raw_data.index[i]
+        price = env.raw_data.iloc[i]['close'] if 'close' in env.raw_data.columns else env.raw_data.iloc[i][-1]
+        
+        print(f"Step {i:3d}: {timestamp} | ${price:8.2f}")
+        
+        # ⏰ 시간 간격 체크
+        if i > 340:
+            prev_timestamp = env.raw_data.index[i-1]
+            try:
+                time_diff = timestamp - prev_timestamp
+                if time_diff.total_seconds() == 0:
+                    print(f"         ⚠️ 동일한 시간!")
+                elif time_diff.total_seconds() < 0:
+                    print(f"         🚨 시간이 거꾸로!")
+                else:
+                    print(f"         ✅ 간격: {time_diff}")
+            except:
+                print(f"         ❓ 시간 비교 불가")

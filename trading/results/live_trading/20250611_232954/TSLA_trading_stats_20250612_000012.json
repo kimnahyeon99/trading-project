@@ -1,0 +1,47 @@
+{
+    "trading_stats": {
+        "start_time": "2025-06-11 23:30:10.743194",
+        "trades": [],
+        "successful_trades": 0,
+        "failed_trades": 0,
+        "initial_balance": 99167.88,
+        "current_balance": 99167.88,
+        "pnl": 0.0,
+        "daily_start_balance": 99996.91,
+        "session_start_positions": {
+            "TSLA": {
+                "symbol": "TSLA",
+                "qty": 2.497,
+                "avg_entry_price": 333.249664,
+                "current_price": 333.0099,
+                "market_value": 831.52572,
+                "unrealized_pl": -0.59869,
+                "unrealized_plpc": -0.0007194717434139,
+                "change_today": 0.0212208286055997
+            }
+        }
+    },
+    "account_info": {
+        "id": "15b65065-eab2-495f-aca4-6241a64cb670",
+        "cash": 99167.88,
+        "portfolio_value": 99996.88,
+        "equity": 99996.88,
+        "buying_power": 199164.76,
+        "status": "ACTIVE",
+        "day_trade_count": 0,
+        "pattern_day_trader": false
+    },
+    "positions": {
+        "TSLA": {
+            "symbol": "TSLA",
+            "qty": 2.497,
+            "avg_entry_price": 333.249664,
+            "current_price": 331.99,
+            "market_value": 828.97903,
+            "unrealized_pl": -3.14538,
+            "unrealized_plpc": -0.0037799395886007,
+            "change_today": 0.0180931644637983
+        }
+    },
+    "timestamp": "2025-06-12 00:00:12"
+}
